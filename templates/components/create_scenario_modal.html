@@ -1,0 +1,111 @@
+<!-- Child Scenario Modal -->
+<div class="modal fade" id="childScenarioModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="childScenarioModalTitle">Add Child Scenario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="childScenarioForm">
+                <div class="modal-body">
+                    <input type="hidden" id="childScenarioParentId" name="parent_id">
+                    
+                    <div class="mb-3">
+                        <label for="scenario_text" class="form-label">Scenario Text *</label>
+                        <textarea class="form-control" id="scenario_text" name="scenario_text" 
+                                  rows="3" required placeholder="Describe the scenario..." 
+                                  oninput="handleChildScenarioDescriptionChange()" onchange="handleChildScenarioDescriptionChange()"></textarea>
+                        <small class="text-muted">Modifying this will automatically update the query text and Python code in real-time</small>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="child_reasoning_template" class="form-label">Query Text</label>
+                        <textarea class="form-control" id="child_reasoning_template" name="reasoning_template" 
+                                  rows="2" maxlength="300" 
+                                  style="font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; background-color: #f8f9fa;" 
+                                  oninput="updateChildQueryCharCount()" 
+                                  placeholder="AESEV is marked as 'Severe', ensure the CTCAE_GRADE is 3 or higher. Flag where the grade is <3."></textarea>
+                        <div class="d-flex justify-content-between">
+                            <small class="text-muted">Clinical query description for data managers</small>
+                            <small id="childQueryCharCount" class="text-muted">0/300 characters</small>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="required_cdash_items" class="form-label">Required CDASH Items</label>
+                        <input type="text" class="form-control" id="required_cdash_items" 
+                               name="required_cdash_items" 
+                               placeholder="Enter comma-separated CDASH items (e.g., VSSYSBP, VSDIABP)">
+                        <div class="form-text">Comma-separated list of required CDASH items</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="domains" class="form-label">Domains</label>
+                        <input type="text" class="form-control" id="domains" name="domains" 
+                               placeholder="Enter comma-separated domains (e.g., VS, LB, AE)">
+                        <div class="form-text">Comma-separated list of domains</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="child_tag" class="form-label">Tag</label>
+                        <select class="form-select" id="child_tag" name="child_tag">
+                            <option value="">Select a tag (optional)</option>
+                            {% for tag in available_tags %}
+                                <option value="{{ tag.name }}">{{ tag.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <label for="child_pseudo_code" class="form-label me-3 mb-0">Python Function</label>
+                            <button class="btn btn-sm btn-outline-secondary" type="button" 
+                                    onclick="toggleChildPythonCode()" 
+                                    id="toggle-child-python-btn">
+                                <i class="fas fa-chevron-down" id="child-python-icon"></i> Show Code
+                            </button>
+                        </div>
+                        <div class="collapse" id="child-python-code-section">
+                            <textarea class="form-control" id="child_pseudo_code" name="pseudo_code" 
+                                      rows="10" style="font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 13px; line-height: 1.4; background-color: #f8f9fa; border: 2px solid #dee2e6;"
+                                      placeholder="def check_validation_rule(df):&#10;    '''Add validation logic here'''&#10;    flagged_records = df[condition]&#10;    return flagged_records"></textarea>
+                            <div class="form-text">Python function will be auto-generated based on scenario description</div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <label for="child_prompt_template" class="form-label me-3 mb-0">SDQ Prompt Template</label>
+                            <button class="btn btn-sm btn-outline-info" type="button" 
+                                    onclick="toggleChildPromptTemplate()" 
+                                    id="toggle-child-prompt-btn">
+                                <i class="fas fa-chevron-down" id="child-prompt-icon"></i> Show Template
+                            </button>
+                        </div>
+                        <div class="collapse" id="child-prompt-template-section">
+                            <textarea class="form-control" id="child_prompt_template" name="prompt_template" 
+                                      rows="8" style="font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 12px; background-color: #f0f8ff; border: 2px solid #007bff;"
+                                      readonly placeholder="Prompt template will be auto-generated"></textarea>
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Shows how description, variables, query text, EDC deep links, and outbound query APIs are structured for Smart Data Quality (SDQ)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Child Scenario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('childScenarioModal').addEventListener('show.bs.modal', function (event) {
+    const parentId = document.getElementById('childScenarioParentId').value;
+    const form = document.getElementById('childScenarioForm');
+    form.action = `/add_child_scenario/${parentId}`;
+});
+</script>

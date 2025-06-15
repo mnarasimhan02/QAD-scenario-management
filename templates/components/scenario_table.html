@@ -1,0 +1,192 @@
+<div class="table-responsive">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Scenario</th>
+                <th>Description</th>
+                <th>Tags</th>
+                <th>Children</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for scenario in scenarios %}
+            <tr data-scenario-id="{{ scenario.id }}" class="scenario-row">
+                <td>
+                    <div class="d-flex align-items-center">
+                        {% if scenario.child_scenarios %}
+                        <button class="btn btn-sm btn-outline-secondary me-2 expand-btn" 
+                                onclick="toggleChildScenarios('{{ scenario.id }}')">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                        {% endif %}
+                        <div>
+                            <strong>{{ scenario.name }}</strong>
+                        </div>
+                    </div>
+                </td>
+                <td>{{ scenario.description }}</td>
+                <td>
+                    {% if scenario.tag %}
+                        <span class="badge bg-{{ scenario.tag.color }} me-1">{{ scenario.tag.name }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="badge bg-info">{{ scenario.child_scenarios|length }}</span>
+                </td>
+                <td>
+                    <form method="POST" action="{{ url_for('toggle_scenario', scenario_id=scenario.id) }}" style="display: inline;">
+                        <button type="submit" class="btn btn-sm btn-{{ 'success' if scenario.is_active else 'outline-secondary' }}" 
+                                title="{{ 'Active - Click to Deactivate' if scenario.is_active else 'Inactive - Click to Activate' }}">
+                            <i class="fas fa-{{ 'toggle-on' if scenario.is_active else 'toggle-off' }}"></i>
+                            {{ 'Active' if scenario.is_active else 'Inactive' }}
+                        </button>
+                    </form>
+                </td>
+                <td>
+                    <div class="btn-group btn-group-sm">
+                        <a href="{{ url_for('dry_run_scenario', scenario_id=scenario.id) }}" 
+                           class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-play-circle me-1"></i>Dry Run
+                        </a>
+                    </div>
+                </td>
+            </tr>
+            
+            <!-- Child scenarios (initially hidden) -->
+            {% for child in scenario.child_scenarios %}
+            <tr class="child-scenario" data-parent-id="{{ scenario.id }}" style="display: none;">
+                <td colspan="6" class="ps-5 bg-light">
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex align-items-start mb-2">
+                                <i class="fas fa-arrow-right me-2 text-muted mt-1"></i>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-2 fw-bold">Child Scenario</h6>
+                                    <div class="scenario-text mb-3">{{ child.scenario_text }}</div>
+                                    
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-2">
+                                                <small class="text-muted">
+                                                    <strong>Query Text:</strong><br>
+                                                    {{ child.reasoning_template }}
+                                                </small>
+                                            </div>
+                                            
+                                            <div class="mb-2">
+                                                <small class="text-muted">
+                                                    <strong>Tag:</strong>
+                                                    {% if child.tag %}
+                                                        <span class="badge bg-{{ child.tag.color }} ms-1">{{ child.tag.name }}</span>
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-6">
+                                            <div class="mb-2">
+                                                <small class="text-muted">
+                                                    <strong>Domains:</strong><br>
+                                                    {% for domain in child.domains %}
+                                                        <span class="badge bg-primary me-1">{{ domain }}</span>
+                                                    {% endfor %}
+                                                </small>
+                                            </div>
+                                            
+                                            <div class="mb-2">
+                                                <small class="text-muted">
+                                                    <strong>Required CDASH Items:</strong><br>
+                                                    {% for item in child.required_cdash_items %}
+                                                        <span class="badge bg-secondary me-1 mb-1">{{ item }}</span>
+                                                    {% endfor %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if child.pseudo_code %}
+                                    <div class="mt-3">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <small class="text-muted me-2"><strong>Python Function:</strong></small>
+                                            <button class="btn btn-sm btn-outline-secondary" type="button" 
+                                                    onclick="toggleOOTBPseudoCode('{{ scenario.id }}_{{ loop.index0 }}')" 
+                                                    id="toggle-ootb-code-{{ scenario.id }}_{{ loop.index0 }}">
+                                                <i class="fas fa-chevron-down" id="ootb-code-icon-{{ scenario.id }}_{{ loop.index0 }}"></i> Show Code
+                                            </button>
+                                        </div>
+                                        <div class="collapse" id="ootb-pseudo-code-{{ scenario.id }}_{{ loop.index0 }}">
+                                            <pre class="bg-dark text-light p-3 rounded small" style="font-family: 'Courier New', monospace; font-size: 12px; max-height: 300px; overflow-y: auto;">{{ child.pseudo_code }}</pre>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div class="mt-3">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <small class="text-muted me-2"><strong>SDQ Prompt Template:</strong></small>
+                                            <button class="btn btn-sm btn-outline-info" type="button" 
+                                                    onclick="toggleOOTBPromptTemplate('{{ scenario.id }}_{{ loop.index0 }}')" 
+                                                    id="toggle-ootb-prompt-{{ scenario.id }}_{{ loop.index0 }}">
+                                                <i class="fas fa-chevron-down" id="ootb-prompt-icon-{{ scenario.id }}_{{ loop.index0 }}"></i> Show Template
+                                            </button>
+                                        </div>
+                                        <div class="collapse" id="ootb-prompt-template-{{ scenario.id }}_{{ loop.index0 }}">
+                                            <div class="bg-light border p-3 rounded" style="font-family: 'Courier New', monospace; font-size: 11px; max-height: 400px; overflow-y: auto;">
+                                                <div class="text-primary fw-bold mb-2">--- SDQ (Smart Data Quality) Prompt Template ---</div>
+                                                
+                                                <div class="mb-2">
+                                                    <strong class="text-secondary">DESCRIPTION:</strong><br>
+                                                    {{ child.scenario_text }}
+                                                </div>
+                                                
+                                                <div class="mb-2">
+                                                    <strong class="text-secondary">EXTRACTED VARIABLES:</strong><br>
+                                                    {% for item in child.required_cdash_items %}{{ item }}{% if not loop.last %}, {% endif %}{% endfor %}
+                                                </div>
+                                                
+                                                <div class="mb-2">
+                                                    <strong class="text-secondary">CLINICAL QUERY TEXT:</strong><br>
+                                                    {{ child.reasoning_template }}
+                                                </div>
+                                                
+                                                <div class="mb-2">
+                                                    <strong class="text-secondary">EDC DEEP LINK:</strong><br>
+                                                    <span class="text-info">https://edc.system.com/forms/{{ child.domains[0]|lower }}?filter={{ child.required_cdash_items|join(',') }}</span>
+                                                </div>
+                                                
+                                                <div class="mb-2">
+                                                    <strong class="text-secondary">OUTBOUND API INTEGRATION:</strong><br>
+                                                    <pre class="mb-0" style="font-size: 10px;">POST /api/queries/create
+{
+  "domain": "{{ child.domains[0] }}",
+  "conditions": "{{ child.required_cdash_items|join(', ') }}",
+  "query_text": "{{ child.reasoning_template }}",
+  "validation_type": "data_quality"
+}</pre>
+                                                </div>
+                                                
+                                                <div class="text-muted">
+                                                    <small><i class="fas fa-info-circle me-1"></i>Shows how description, variables, query text, EDC deep links, and outbound query APIs connect to Smart Data Quality (SDQ)</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if not scenarios %}
+    <div class="text-center py-4">
+        <i class="fas fa-search fa-3x text-muted mb-3"></i>
+        <p class="text-muted">No scenarios found. Try adjusting your search criteria.</p>
+    </div>
+    {% endif %}
+</div>

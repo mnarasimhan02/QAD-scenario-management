@@ -1,0 +1,72 @@
+/* Child scenario styling */
+.child-scenario {
+    display: none;
+    background-color: #f8f9fa;
+    border-left: 3px solid #dee2e6;
+}
+
+.child-scenario.show {
+    display: table-row !important;
+}
+
+/* Ensure table rows display properly */
+.table tbody tr.child-scenario.show {
+    display: table-row !important;
+}
+
+/* Arrow rotation animation */
+.expand-btn i {
+    transition: transform 0.3s ease-in-out;
+    transform-origin: center;
+}
+
+.expand-btn i.rotated {
+    transform: rotate(90deg);
+}
+
+/* Smooth hover effect for expand button */
+.expand-btn {
+    transition: all 0.2s ease-in-out;
+}
+
+.expand-btn:hover {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    color: white;
+}
+
+/* Suggestion card styling */
+.suggestion-card {
+    transition: all 0.3s ease;
+    border: 2px solid #dee2e6;
+}
+
+.suggestion-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.suggestion-card.selected {
+    border-color: #198754 !important;
+    background-color: #f8fff9 !important;
+}
+
+.suggestion-card .card-header {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.suggestion-card .badge {
+    font-size: 0.75em;
+}
+
+/* Form improvements */
+.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+/* Loading state */
+#loadingSuggestions {
+    background: linear-gradient(45deg, #f8f9fa, #e9ecef);
+    border-radius: 8px;
+}

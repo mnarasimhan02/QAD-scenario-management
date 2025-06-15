@@ -1,0 +1,1348 @@
+[
+  {
+    "name": "AE outcome with grade change",
+    "description": "Clinical data quality scenarios for AE domain validation",
+    "tag": "Tag(name='Safety', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "If a condition worsens the following day (same \"Adverse Events \u2013 Reported Term for the Adverse Event\" (AETERM)), \"Adverse Events \u2013 Outcome of Adverse Event\" (AEOUT) should be \u201cnot recovered/not resolved\u201d.",
+        "required_cdash_items": [
+          "AESTDTC",
+          "AEENDTC",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AESER",
+          "AESEV",
+          "AETERM",
+          "AETOXGR",
+          "AEREFID"
+        ],
+        "domains": [
+          "AE"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "If there are at least two adverse event records (for the same or similar 'AETERM') recorded within a 24-hour period, and the subject\u2019s condition deteriorates on the following day as evidenced by an increase in the toxicity grade ('AETOXGR'), then the outcome ('AEOUT') must be documented as \"not recovered/not resolved\" or its synonyms. An outcome of \"recovered/resolved\" is not acceptable when a subsequent record shows a toxicity grade increase.",
+        "pseudo_code": "# Data validation logic for If the same adverse event gets worse the next day, the outcome must say 'not resolved'.\n# Based on: QAD\u2011AE\u2011grade_outcome\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    If there are at least two adverse event records (for the same or similar 'AETERM') recorded within a 24-hour period, and the subject\u2019s condition deteriorates on the following day as evidenced by an in...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AESTDTC', 'AEENDTC', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AESER', 'AESEV', 'AETERM', 'AETOXGR', 'AEREFID']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # If the same adverse event gets worse the next day, the outcome must say 'not resolved'.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "If consecutive days show decreasing \"Adverse Event \u2013 Standard Toxicity Grade\" (AETOXGR) for the same \"Adverse Events \u2013 Reported Term for the Adverse Event\" (AETERM), \"Adverse Events \u2013 Outcome of Adverse Event\" (AEOUT) should indicate \u201crecovering/resolving\u201d.",
+        "required_cdash_items": [
+          "AESTDTC",
+          "AEENDTC",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AESER",
+          "AESEV",
+          "AETERM",
+          "AETOXGR",
+          "AEREFID"
+        ],
+        "domains": [
+          "AE"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "If there are at least two adverse event records (for the same or similar 'AETERM') documented within a 24-hour period, and the subject\u2019s condition improves on the following day as indicated by a decrease in the toxicity grade ('AETOXGR'), then the outcome ('AEOUT') must be recorded as \"recovering,\" \"resolving,\" \"recovered/resolved,\" or equivalent synonyms. An outcome of \"not recovered/not resolved\" is not acceptable when subsequent records clearly demonstrate an improvement in the toxicity grade...",
+        "pseudo_code": "# Data validation logic for If toxicity grade drops on consecutive days for an event, the outcome should say 'recovering'.\n# Based on: QAD\u2011AE\u2011grade_outcome\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    If there are at least two adverse event records (for the same or similar 'AETERM') documented within a 24-hour period, and the subject\u2019s condition improves on the following day as indicated by a decre...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AESTDTC', 'AEENDTC', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AESER', 'AESEV', 'AETERM', 'AETOXGR', 'AEREFID']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # If toxicity grade drops on consecutive days for an event, the outcome should say 'recovering'.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "AE- Treatment consistency",
+    "description": "Clinical data quality scenarios for AE_CM domain validation",
+    "tag": "Tag(name='Safety', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Reported Name of Drug, Med, or Therapy\" (CMTRT) should be consistent with \"Adverse Events \u2013 Reported Term for the Adverse Event\" (AETERM) when \"Adverse Event \u2013 Concomitant or Additional Trtmnt Given\" (AECONTRT) = Yes. Example: Ibuprofen incorrectly prescribed for Hypertension.",
+        "required_cdash_items": [
+          "AEREFID",
+          "AESTDTC",
+          "CMSTDTC",
+          "CMAENO",
+          "AETERM",
+          "CMINDC",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AESER",
+          "AESEV",
+          "AETOXGR",
+          "CMDECOD",
+          "CMROUTE",
+          "CMTRT"
+        ],
+        "domains": [
+          "AE",
+          "CM"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "\nClinical Consistency between CMTRT and AETERM: Only when both the values in 'CMTRT' and 'AETERM' are not null and AECONTRT (\u201cConcomitant medication given\u201d) is marked Yes, then 'CMTRT' (Drug, Medication or Therapy) must be clinically suitable/consistent for the diagnosis represented in 'AETERM' (Adverse Event term).\n",
+        "pseudo_code": "# Data validation logic for The drug given should match the condition described by the adverse event.\n# Based on: QAD\u2011AE_CM\u2011treatment_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    \nClinical Consistency between CMTRT and AETERM: Only when both the values in 'CMTRT' and 'AETERM' are not null and AECONTRT (\u201cConcomitant medication given\u201d) is marked Yes, then 'CMTRT' (Drug, Medicati...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AEREFID', 'AESTDTC', 'CMSTDTC', 'CMAENO', 'AETERM', 'CMINDC', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AESER', 'AESEV', 'AETOXGR', 'CMDECOD', 'CMROUTE', 'CMTRT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # The drug given should match the condition described by the adverse event.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "If \"Adverse Event \u2013 Concomitant or Additional Trtmnt Given\" (AECONTRT) = Yes, \"Concomitant Meds Indication\" (CMINDC) must align with \"Adverse Events \u2013 Reported Term for the Adverse Event\" (AETERM)",
+        "required_cdash_items": [
+          "AEREFID",
+          "AESTDTC",
+          "CMSTDTC",
+          "CMAENO",
+          "AETERM",
+          "CMINDC",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AESER",
+          "AESEV",
+          "AETOXGR",
+          "CMDECOD",
+          "CMROUTE",
+          "CMTRT"
+        ],
+        "domains": [
+          "AE",
+          "CM"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "Concomitant Medication Requirement:If 'AECONTRT' (Concomitant medication given) is marked as 'yes', then 'CMINDC' (Concomitant Medication Indication) must have a valid diagnosis/indication.\nConsistency with Diagnosis: If both 'CMINDC' and 'AETERM' are not null, then 'CMINDC' (Concomitant Medication Indication) should align with the diagnosis as indicated in 'AETERM' (Adverse Event Term). If 'CMINDC' and 'AETERM' refer to the same condition or are synonymous, then they are considered aligned.\n",
+        "pseudo_code": "# Data validation logic for When treatment is given for an adverse event, its stated indication must match that event.\n# Based on: QAD\u2011AE_CM\u2011treatment_consistency\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Concomitant Medication Requirement:If 'AECONTRT' (Concomitant medication given) is marked as 'yes', then 'CMINDC' (Concomitant Medication Indication) must have a valid diagnosis/indication.\nConsistenc...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AEREFID', 'AESTDTC', 'CMSTDTC', 'CMAENO', 'AETERM', 'CMINDC', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AESER', 'AESEV', 'AETOXGR', 'CMDECOD', 'CMROUTE', 'CMTRT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # When treatment is given for an adverse event, its stated indication must match that event.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "AE-Assessment consistency",
+    "description": "Clinical data quality scenarios for AE_EG domain validation",
+    "tag": "Tag(name='Safety', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Adverse Events \u2013 Reported Term for the Adverse Event\" (AETERM) and \"ECG Test Results \u2013 Description of Finding\" (EGDESC) should align.",
+        "required_cdash_items": [
+          "AEREFID",
+          "AESTDTC",
+          "EGSTDTC",
+          "EGAENO",
+          "AETERM",
+          "EGDESC",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AESER",
+          "AESEV",
+          "AETOXGR",
+          "EGDTC",
+          "EGNRIND",
+          "EGORNRHI",
+          "EGORNRLO",
+          "EGORRES",
+          "EGPERF",
+          "EGTEST",
+          "EGORRESU",
+          "VISITNAME",
+          "EGPOS",
+          "EGCLSIG"
+        ],
+        "domains": [
+          "AE"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "Consistency Check: Only when both the values in 'AETERM'  and 'EGDESC'  are not null, and,'AEREFID' (Adverse Event Reference ID) is equal to 'EGAENO'(Related Adverse Event ID), then the diagnosis in 'AETERM' (Adverse Event Term) and 'EGDESC' (Electrocardiogram Description) must align with one another to ensure that the data is accurately represented.  \n",
+        "pseudo_code": "# Data validation logic for Adverse event term should align with ECG finding description.\n# Based on: QAD\u2011AE_EG\u2011assessment_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Consistency Check: Only when both the values in 'AETERM'  and 'EGDESC'  are not null, and,'AEREFID' (Adverse Event Reference ID) is equal to 'EGAENO'(Related Adverse Event ID), then the diagnosis in '...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AEREFID', 'AESTDTC', 'EGSTDTC', 'EGAENO', 'AETERM', 'EGDESC', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AESER', 'AESEV', 'AETOXGR', 'EGDTC', 'EGNRIND', 'EGORNRHI', 'EGORNRLO', 'EGORRES', 'EGPERF', 'EGTEST', 'EGORRESU', 'VISITNAME', 'EGPOS', 'EGCLSIG']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Adverse event term should align with ECG finding description.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "AE-Assessment consistency",
+    "description": "Clinical data quality scenarios for AE_LB domain validation",
+    "tag": "Tag(name='Safety', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Lab test Result or Finding\" (LBORRES) > \"Reference Range Upper Limit\" (LBORNRHI) should align with abnormal \"Adverse Events \u2013 Reported Term for the Adverse Event\" (AETERM).",
+        "required_cdash_items": [
+          "AEREFID",
+          "AESTDTC",
+          "LBSTDTC",
+          "LBAENO",
+          "AETERM",
+          "LBTEST",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AEPTCD",
+          "AESER",
+          "AESEV",
+          "AETOXGR",
+          "LBCLSIG",
+          "LBDTC",
+          "LBLOC",
+          "LBORNRHI",
+          "LBORNRLO",
+          "LBORRES",
+          "LBORRESU",
+          "LBPERF",
+          "LBTOXGR",
+          "VISITNAME",
+          "LBCAT"
+        ],
+        "domains": [
+          "AE",
+          "LB"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "Consistency with Abnormal Results: If the values in 'AETERM', 'LBORRES' and 'LBORNRHI' are not null, then the Adverse event term 'AETERM', must be consistent with the abnormal findings for the 'LBTEST' (Lab test) when the Lab result value in 'LBORRES' is greater than the value in the upper limit 'LBORNRHI'. The units of measurement 'LBORRESU' should be considered if available.\n",
+        "pseudo_code": "# Data validation logic for Lab value above the high limit should have an adverse event describing that abnormality.\n# Based on: QAD\u2011AE_LB\u2011assessment_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Consistency with Abnormal Results: If the values in 'AETERM', 'LBORRES' and 'LBORNRHI' are not null, then the Adverse event term 'AETERM', must be consistent with the abnormal findings for the 'LBTEST...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AEREFID', 'AESTDTC', 'LBSTDTC', 'LBAENO', 'AETERM', 'LBTEST', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AEPTCD', 'AESER', 'AESEV', 'AETOXGR', 'LBCLSIG', 'LBDTC', 'LBLOC', 'LBORNRHI', 'LBORNRLO', 'LBORRES', 'LBORRESU', 'LBPERF', 'LBTOXGR', 'VISITNAME', 'LBCAT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Lab value above the high limit should have an adverse event describing that abnormality.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "\"Lab test Result or Finding\" (LBORRES) < \"Reference Range Lower Limit\" (LBORNRLO) should align with abnormal \"Adverse Events \u2013 Reported Term for the Adverse Event\" (AETERM).",
+        "required_cdash_items": [
+          "AEREFID",
+          "AESTDTC",
+          "LBSTDTC",
+          "LBAENO",
+          "AETERM",
+          "LBTEST",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AEPTCD",
+          "AESER",
+          "AESEV",
+          "AETOXGR",
+          "LBCLSIG",
+          "LBDTC",
+          "LBLOC",
+          "LBORNRHI",
+          "LBORNRLO",
+          "LBORRES",
+          "LBORRESU",
+          "LBPERF",
+          "LBTOXGR",
+          "VISITNAME",
+          "LBCAT"
+        ],
+        "domains": [
+          "AE",
+          "LB"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "Consistency with Abnormal Results: If the values in 'AETERM', 'LBORRES' and 'LBORNRLO' are not null, then the Adverse event term 'AETERM' must be consistent with the abnormal findings for the 'LBTEST' (Lab test) when the value in 'LBORRES'(Lab result value) is lower than the value in the lower limit 'LBORNRLO'. The units of measurement 'LBORRESU' should be considered if available.\n",
+        "pseudo_code": "# Data validation logic for Lab value below the low limit should have a matching adverse event.\n# Based on: QAD\u2011AE_LB\u2011assessment_consistency\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Consistency with Abnormal Results: If the values in 'AETERM', 'LBORRES' and 'LBORNRLO' are not null, then the Adverse event term 'AETERM' must be consistent with the abnormal findings for the 'LBTEST'...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AEREFID', 'AESTDTC', 'LBSTDTC', 'LBAENO', 'AETERM', 'LBTEST', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AEPTCD', 'AESER', 'AESEV', 'AETOXGR', 'LBCLSIG', 'LBDTC', 'LBLOC', 'LBORNRHI', 'LBORNRLO', 'LBORRES', 'LBORRESU', 'LBPERF', 'LBTOXGR', 'VISITNAME', 'LBCAT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Lab value below the low limit should have a matching adverse event.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "Clinically significant abnormal lab results should have a relevant AE.",
+        "required_cdash_items": [
+          "AEREFID",
+          "AESTDTC",
+          "LBSTDTC",
+          "LBAENO",
+          "AETERM",
+          "LBTEST",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AEPTCD",
+          "AESER",
+          "AESEV",
+          "AETOXGR",
+          "LBCLSIG",
+          "LBDTC",
+          "LBLOC",
+          "LBORNRHI",
+          "LBORNRLO",
+          "LBORRES",
+          "LBORRESU",
+          "LBPERF",
+          "LBTOXGR",
+          "VISITNAME",
+          "LBCAT"
+        ],
+        "domains": [
+          "AE",
+          "LB"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "Abnormal Lab Results:If the lab results ('LBORRES') are abnormal and not null for the lab test in 'LBTEST'(if not null), meaning they exceed the upper limit ('LBORNRHI') when 'LBORNRHI' is not null, or fall below the lower limit ('LBORNRLO') when 'LBORNRLO' is not null, and the lab significance ('LBCLSIG') is marked as 'yes', it is essential to document a relevant adverse event for the subject. The units of measurement 'LBORRESU' should be considered if available.\nAdverse Event Documentation:Cli...",
+        "pseudo_code": "# Data validation logic for Clinically significant abnormal lab results need a related adverse event.\n# Based on: QAD\u2011AE_LB\u2011assessment_consistency\u2011001.03\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Abnormal Lab Results:If the lab results ('LBORRES') are abnormal and not null for the lab test in 'LBTEST'(if not null), meaning they exceed the upper limit ('LBORNRHI') when 'LBORNRHI' is not null, o...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AEREFID', 'AESTDTC', 'LBSTDTC', 'LBAENO', 'AETERM', 'LBTEST', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AEPTCD', 'AESER', 'AESEV', 'AETOXGR', 'LBCLSIG', 'LBDTC', 'LBLOC', 'LBORNRHI', 'LBORNRLO', 'LBORRES', 'LBORRESU', 'LBPERF', 'LBTOXGR', 'VISITNAME', 'LBCAT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Clinically significant abnormal lab results need a related adverse event.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "AE-MH consistency",
+    "description": "Clinical data quality scenarios for AE_MH domain validation",
+    "tag": "Tag(name='Safety', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Dictionary\u2011Derived Adverse Event Term\" (AEDECOD) must be diagnostically consistent with \"Dictionary\u2011Derived Medical History Term\" (MHDECOD).",
+        "required_cdash_items": [
+          "AEREFID",
+          "AESTDTC",
+          "MHSTDTC",
+          "MHAENO",
+          "AETERM",
+          "MHTERM",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AESER",
+          "AESEV",
+          "AETOXGR",
+          "MHCONTRT",
+          "MHDECOD",
+          "MHONGO",
+          "MHTOX",
+          "MHTOXGR"
+        ],
+        "domains": [
+          "AE"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "Diagnostic Consistency:If values in 'AEDECOD' and 'MHDECOD' are not null, then 'AEDECOD' (the MedDRA dictionary term for an adverse event) must be diagnostically consistent with or clinically similar to the MEDDRA dictionary term specified in'MHDECOD' term.\n",
+        "pseudo_code": "# Data validation logic for Dictionary AE term must match dictionary medical\u2011history term.\n# Based on: QAD\u2011AE_MH\u2011mh_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Diagnostic Consistency:If values in 'AEDECOD' and 'MHDECOD' are not null, then 'AEDECOD' (the MedDRA dictionary term for an adverse event) must be diagnostically consistent with or clinically similar ...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AEREFID', 'AESTDTC', 'MHSTDTC', 'MHAENO', 'AETERM', 'MHTERM', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AESER', 'AESEV', 'AETOXGR', 'MHCONTRT', 'MHDECOD', 'MHONGO', 'MHTOX', 'MHTOXGR']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Dictionary AE term must match dictionary medical\u2011history term.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "\"Adverse Events \u2013 Reported Term for the Adverse Event\" (AETERM) should indicate worsening if \"Ongoing Medical History Event\" (MHONGO) = Yes.",
+        "required_cdash_items": [
+          "AEREFID",
+          "AESTDTC",
+          "MHSTDTC",
+          "MHAENO",
+          "AETERM",
+          "MHTERM",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AESER",
+          "AESEV",
+          "AETOXGR",
+          "MHCONTRT",
+          "MHDECOD",
+          "MHONGO",
+          "MHTOX",
+          "MHTOXGR"
+        ],
+        "domains": [
+          "AE"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "Condition Indication:If both  'AETERM' and 'MHTERM' are not null, and 'MHONGO' (Ongoing Event of Medical History) is marked as 'yes', then 'AETERM' (Adverse Event term) must indicate a worsening condition related to 'MHTERM' (Medical History Adverse Event term). This includes terms such as 'worsening', 'exacerbation', 'increase', 'flare', or 'elevated'.\nExamples: 1. If \"MHTERM\" is 'cancer pain' and \"MHONGO\" is 'yes', then \"AETERM\" can be  'worsening cancer pain' or 'increased cancer pain'.  Exam...",
+        "pseudo_code": "# Data validation logic for If medical history is ongoing, the adverse event term should indicate worsening.\n# Based on: QAD\u2011AE_MH\u2011mh_consistency\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Condition Indication:If both  'AETERM' and 'MHTERM' are not null, and 'MHONGO' (Ongoing Event of Medical History) is marked as 'yes', then 'AETERM' (Adverse Event term) must indicate a worsening condi...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AEREFID', 'AESTDTC', 'MHSTDTC', 'MHAENO', 'AETERM', 'MHTERM', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AESER', 'AESEV', 'AETOXGR', 'MHCONTRT', 'MHDECOD', 'MHONGO', 'MHTOX', 'MHTOXGR']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # If medical history is ongoing, the adverse event term should indicate worsening.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "AE-Assessment consistency",
+    "description": "Clinical data quality scenarios for AE_PE domain validation",
+    "tag": "Tag(name='Safety', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "Clinically significant abnormal \"Verbatim Finding\" (PEORRES) must have a relevant \"Adverse Events - Reported Term for the Adverse Event AE\".",
+        "required_cdash_items": [
+          "AEREFID",
+          "AESTDTC",
+          "PESTDTC",
+          "PEAENO",
+          "AETERM",
+          "PEDESC",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AESER",
+          "AESEV",
+          "AETOXGR",
+          "PECAT",
+          "PECLSIG",
+          "PEDTC",
+          "PEORNRHI",
+          "PEORNRLO",
+          "PEORRES",
+          "PEORRESU",
+          "PETEST"
+        ],
+        "domains": [
+          "AE"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "Abnormal Physical Examination Results:If the Physical Examination results in 'PEORRES' for the Physical Examination test in 'PETEST' is not null and abnormal, meaning they exceed the upper limit specified in 'PEORNRHI' (when 'PEORNRHI' is not null) or fall below the lower limit specified in 'PEORNRLO' (when 'PEORNRLO is not null),and 'PECLSIG' is indicated as 'yes', then it is crucial to document a corresponding adverse event record for the subject. The units of measurement 'PEORRESU' should be ...",
+        "pseudo_code": "# Data validation logic for Clinically significant abnormal physical exam findings must have a related adverse event.\n# Based on: QAD\u2011AE_PE\u2011assessment_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Abnormal Physical Examination Results:If the Physical Examination results in 'PEORRES' for the Physical Examination test in 'PETEST' is not null and abnormal, meaning they exceed the upper limit speci...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AEREFID', 'AESTDTC', 'PESTDTC', 'PEAENO', 'AETERM', 'PEDESC', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AESER', 'AESEV', 'AETOXGR', 'PECAT', 'PECLSIG', 'PEDTC', 'PEORNRHI', 'PEORNRLO', 'PEORRES', 'PEORRESU', 'PETEST']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Clinically significant abnormal physical exam findings must have a related adverse event.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "\"Adverse Events \u2013 Reported Term for the Adverse Event\" (AETERM) should relate logically to \"Body System Examined\" (PETEST).",
+        "required_cdash_items": [
+          "AEREFID",
+          "AESTDTC",
+          "PESTDTC",
+          "PEAENO",
+          "AETERM",
+          "PEDESC",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AESER",
+          "AESEV",
+          "AETOXGR",
+          "PECAT",
+          "PECLSIG",
+          "PEDTC",
+          "PEORNRHI",
+          "PEORNRLO",
+          "PEORRES",
+          "PEORRESU",
+          "PETEST"
+        ],
+        "domains": [
+          "AE"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "Relationship Between Terms: If both the values in 'AETERM'  and 'PETEST' are not null, then the adverse event term in 'AETERM' must be logically and contextually connected to the body system examined in 'PETEST'. This ensures that the event term accurately reflects the body system being assessed.\n",
+        "pseudo_code": "# Data validation logic for Adverse event term should correspond to the body system examined.\n# Based on: QAD\u2011AE_PE\u2011assessment_consistency\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Relationship Between Terms: If both the values in 'AETERM'  and 'PETEST' are not null, then the adverse event term in 'AETERM' must be logically and contextually connected to the body system examined ...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AEREFID', 'AESTDTC', 'PESTDTC', 'PEAENO', 'AETERM', 'PEDESC', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AESER', 'AESEV', 'AETOXGR', 'PECAT', 'PECLSIG', 'PEDTC', 'PEORNRHI', 'PEORNRLO', 'PEORRES', 'PEORRESU', 'PETEST']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Adverse event term should correspond to the body system examined.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "AE-Procedure consistency",
+    "description": "Clinical data quality scenarios for AE_PR domain validation",
+    "tag": "Tag(name='Safety', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Reported Name of Procedure\" (PRTRT) should be clinically relevant to \"Adverse Events \u2013 Reported Term for the Adverse Event\" (AETERM).",
+        "required_cdash_items": [
+          "AEPRNO",
+          "AESTDTC",
+          "PRSTDTC",
+          "PRAENO",
+          "AETERM",
+          "PRTRT",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AESER",
+          "AESEV",
+          "AETOXGR",
+          "PRDTC",
+          "PRPERF",
+          "PRSTAT"
+        ],
+        "domains": [
+          "AE"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "Clinical Relevance:When both the values in 'PRTRT' and 'AETERM' are not null, then the procedure listed in the 'PRTRT' column must have clinical relevance to the corresponding diagnosis in the 'AETERM' column (Adverse Event term). This ensures that the reported treatment is appropriately aligned with the adverse event being documented.\n",
+        "pseudo_code": "# Data validation logic for The reported procedure should be clinically relevant to the adverse event.\n# Based on: QAD\u2011AE_PR\u2011procedure_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Clinical Relevance:When both the values in 'PRTRT' and 'AETERM' are not null, then the procedure listed in the 'PRTRT' column must have clinical relevance to the corresponding diagnosis in the 'AETERM...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AEPRNO', 'AESTDTC', 'PRSTDTC', 'PRAENO', 'AETERM', 'PRTRT', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AESER', 'AESEV', 'AETOXGR', 'PRDTC', 'PRPERF', 'PRSTAT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # The reported procedure should be clinically relevant to the adverse event.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "AE-Assessment consistency",
+    "description": "Clinical data quality scenarios for AE_VS domain validation",
+    "tag": "Tag(name='Safety', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "High abnormal \"Result or Finding\" (VSORRES) should be consistent with \"Adverse Events \u2013 Reported Term for the Adverse Event\" (AETERM).",
+        "required_cdash_items": [
+          "AEREFID",
+          "AESTDTC",
+          "VSSTDTC",
+          "VSAENO",
+          "AETERM",
+          "VSTEST",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AESER",
+          "AESEV",
+          "AETOXGR",
+          "VSCLSIG",
+          "VSDTC",
+          "VSORNRHI",
+          "VSORNRLO",
+          "VSORRES",
+          "VSORRESU",
+          "VSPERF",
+          "VISITNAME"
+        ],
+        "domains": [
+          "AE",
+          "VS"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "Comparison with Normal Range:Only when the values in 'VSORRES',  'VSORNRHI', 'VSTEST' and 'AETERM' are not null, and Vital Signs result value in 'VSORRES' for the respective Vital Signs test in 'VSTEST', exceeds the upper limit specified in 'VSORNRHI', then the corresponding 'AETERM' (Adverse Event term) should correspond to the results that are deemed abnormal.  The units of measurement 'VSORRESU' should be considered if available.\nConsistency with Abnormal Results:It is crucial that 'AETERM' (...",
+        "pseudo_code": "# Data validation logic for Vital\u2011sign value above normal should have a matching adverse event.\n# Based on: QAD\u2011AE_VS\u2011assessment_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Comparison with Normal Range:Only when the values in 'VSORRES',  'VSORNRHI', 'VSTEST' and 'AETERM' are not null, and Vital Signs result value in 'VSORRES' for the respective Vital Signs test in 'VSTES...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AEREFID', 'AESTDTC', 'VSSTDTC', 'VSAENO', 'AETERM', 'VSTEST', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AESER', 'AESEV', 'AETOXGR', 'VSCLSIG', 'VSDTC', 'VSORNRHI', 'VSORNRLO', 'VSORRES', 'VSORRESU', 'VSPERF', 'VISITNAME']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Vital\u2011sign value above normal should have a matching adverse event.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "Low abnormal \"Result or Finding\" (VSORRES) should be consistent with \"Adverse Events \u2013 Reported Term for the Adverse Event\" (AETERM).",
+        "required_cdash_items": [
+          "AEREFID",
+          "AESTDTC",
+          "VSSTDTC",
+          "VSAENO",
+          "AETERM",
+          "VSTEST",
+          "AECONTRT",
+          "AEDECOD",
+          "AEONGO",
+          "AEOUT",
+          "AESER",
+          "AESEV",
+          "AETOXGR",
+          "VSCLSIG",
+          "VSDTC",
+          "VSORNRHI",
+          "VSORNRLO",
+          "VSORRES",
+          "VSORRESU",
+          "VSPERF",
+          "VISITNAME"
+        ],
+        "domains": [
+          "AE",
+          "VS"
+        ],
+        "tag": "Tag(name='Safety', color='light text-dark')",
+        "reasoning_template": "Result Consistency: Only when the values in 'VSORRES' , 'VSORNRLO', 'VSTEST' and 'AETERM' are not null, and the value recorded in 'VSORRES' (Vital Signs Result) for 'VSTEST' (Vital Signs Test), is below the lower limit indicated in 'VSORNRLO', then the 'AETERM' (Adverse Event term) should correspond with the abnormal results observed.  The units of measurement 'VSORRESU' should be considered if available.\n",
+        "pseudo_code": "# Data validation logic for Vital\u2011sign value below normal should have a matching adverse event.\n# Based on: QAD\u2011AE_VS\u2011assessment_consistency\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Result Consistency: Only when the values in 'VSORRES' , 'VSORNRLO', 'VSTEST' and 'AETERM' are not null, and the value recorded in 'VSORRES' (Vital Signs Result) for 'VSTEST' (Vital Signs Test), is bel...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AEREFID', 'AESTDTC', 'VSSTDTC', 'VSAENO', 'AETERM', 'VSTEST', 'AECONTRT', 'AEDECOD', 'AEONGO', 'AEOUT', 'AESER', 'AESEV', 'AETOXGR', 'VSCLSIG', 'VSDTC', 'VSORNRHI', 'VSORNRLO', 'VSORRES', 'VSORRESU', 'VSPERF', 'VISITNAME']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Vital\u2011sign value below normal should have a matching adverse event.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Coding consistency",
+    "description": "Clinical data quality scenarios for CM domain validation",
+    "tag": "Tag(name='Compliance', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Standardized Medication Name\" (CMDECOD) must match a WHO\u2011Drug term for \"Reported Name of Drug, Med, or Therapy\" (CMTRT).",
+        "required_cdash_items": [
+          "CMSTDTC",
+          "CMDECOD",
+          "CMINDC",
+          "CMROUTE",
+          "CMTRT",
+          "CMREFID"
+        ],
+        "domains": [
+          "CM"
+        ],
+        "tag": "Tag(name='Compliance', color='light text-dark')",
+        "reasoning_template": "Dictionary Compliance: If 'CMDECOD' (the standardized medication name) is provided, it must match a term from the WhoDrug Dictionary that corresponds to the medication indicated in 'CMTRT' (the medication name). If 'CMDECOD' includes multiple medication names, ensure that they collectively represent the medication indicated in 'CMTRT'. ",
+        "pseudo_code": "# Data validation logic for Standardized medication name must represent the reported drug.\n# Based on: QAD\u2011CM\u2011coding_dictionary_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Dictionary Compliance: If 'CMDECOD' (the standardized medication name) is provided, it must match a term from the WhoDrug Dictionary that corresponds to the medication indicated in 'CMTRT' (the medica...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['CMSTDTC', 'CMDECOD', 'CMINDC', 'CMROUTE', 'CMTRT', 'CMREFID']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Standardized medication name must represent the reported drug.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Treatment Consistency",
+    "description": "Clinical data quality scenarios for CM domain validation",
+    "tag": "Tag(name='Compliance', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Reported Name of Drug, Med, or Therapy\" (CMTRT) must be appropriate for \"Concomitant Meds Indication\" (CMINDC).",
+        "required_cdash_items": [
+          "CMSTDTC",
+          "CMDECOD",
+          "CMINDC",
+          "CMROUTE",
+          "CMTRT",
+          "CMREFID"
+        ],
+        "domains": [
+          "CM"
+        ],
+        "tag": "Tag(name='Compliance', color='light text-dark')",
+        "reasoning_template": "Treatment Relevance:If 'CMTRT' (medication) is recorded, it must be appropriate and relevant to the treatment of the diagnosis indicated in 'CMINDC'.\n",
+        "pseudo_code": "# Data validation logic for The drug must be appropriate for its recorded indication.\n# Based on: QAD\u2011CM\u2011treatment_consistency\u2011002.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Treatment Relevance:If 'CMTRT' (medication) is recorded, it must be appropriate and relevant to the treatment of the diagnosis indicated in 'CMINDC'.\n...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['CMSTDTC', 'CMDECOD', 'CMINDC', 'CMROUTE', 'CMTRT', 'CMREFID']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # The drug must be appropriate for its recorded indication.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Treatment Consistency",
+    "description": "Clinical data quality scenarios for CM_MH domain validation",
+    "tag": "Tag(name='Compliance', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Concomitant Meds Indication\" (CMINDC) should align with \"Reported Term for the Medical History\" (MHTERM) when \"Medical History \u2013 Concomitant or Additional Trtmnt Given\" (MHCONTRT) = Yes.",
+        "required_cdash_items": [
+          "CMMHNO",
+          "CMSTDTC",
+          "MHSTDTC",
+          "MHREFID",
+          "CMINDC",
+          "MHTERM",
+          "CMDECOD",
+          "CMROUTE",
+          "CMTRT",
+          "MHCONTRT",
+          "MHDECOD",
+          "MHONGO",
+          "MHTOXGR"
+        ],
+        "domains": [
+          "CM"
+        ],
+        "tag": "Tag(name='Compliance', color='light text-dark')",
+        "reasoning_template": "Consistency with Diagnosis:If values in 'CMINDC' and 'MHTERM' are not null and 'MHCONTRT' (Medication given) is marked as 'yes', then 'CMINDC' (Clinical Indication) must be aligned with the diagnosis specified in 'MHTERM' (Medical History Term). If 'CMINDC' and 'MHTERM' refer to the same condition or are synonymous, then they are considered aligned.\n\n\n",
+        "pseudo_code": "# Data validation logic for Medication indication should align with medical\u2011history term when treatment given.\n# Based on: QAD\u2011CM_MH\u2011treatment_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Consistency with Diagnosis:If values in 'CMINDC' and 'MHTERM' are not null and 'MHCONTRT' (Medication given) is marked as 'yes', then 'CMINDC' (Clinical Indication) must be aligned with the diagnosis ...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['CMMHNO', 'CMSTDTC', 'MHSTDTC', 'MHREFID', 'CMINDC', 'MHTERM', 'CMDECOD', 'CMROUTE', 'CMTRT', 'MHCONTRT', 'MHDECOD', 'MHONGO', 'MHTOXGR']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Medication indication should align with medical\u2011history term when treatment given.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "DM consistency",
+    "description": "Clinical data quality scenarios for DM domain validation",
+    "tag": "Tag(name='Data Quality', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Ethnicity\" ETHNIC must align with \"Race\" RACE.",
+        "required_cdash_items": [
+          "AGE",
+          "BRTHDTC",
+          "ETHNIC",
+          "RACE",
+          "RACEOTH",
+          "RFICDTC",
+          "SEX"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Data Quality', color='light text-dark')",
+        "reasoning_template": "Consistency Between Ethnicity and Race:The Ethnicity recorded in 'ETHNIC' must align with the Race in 'RACE'. Any inconsistencies between these two categories may suggest possible data entry errors.\n",
+        "pseudo_code": "# Data validation logic for Ethnicity value must be consistent with race value.\n# Based on: QAD\u2011DM\u2011dm_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Consistency Between Ethnicity and Race:The Ethnicity recorded in 'ETHNIC' must align with the Race in 'RACE'. Any inconsistencies between these two categories may suggest possible data entry errors.\n...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['AGE', 'BRTHDTC', 'ETHNIC', 'RACE', 'RACEOTH', 'RFICDTC', 'SEX']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Ethnicity value must be consistent with race value.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "EG Tests Outlier Detection",
+    "description": "Clinical data quality scenarios for EG domain validation",
+    "tag": "Tag(name='Other', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "ECG abnormality in \"ECG Test Results \u2013 Description of Finding\" (EGDESC) must have standardized code \"ECG Test Results \u2013 Normal/Reference Range Indicator\" (EGNRIND).",
+        "required_cdash_items": [
+          "EGSTDTC",
+          "EGDESC",
+          "EGDTC",
+          "EGNRIND",
+          "EGORNRHI",
+          "EGORNRLO",
+          "EGORRES",
+          "EGPERF",
+          "EGTEST",
+          "EGORRESU",
+          "VISITNAME",
+          "EGPOS"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "ECG Abnormalities:If the 'EGDESC' (ECG Description of finding) specifies certain ECG abnormalities and the 'EGNRIND' (Normal/Reference Range Indicator) is not null, then the 'EGNRIND' must contain a valid standardized ECG interpretation code to accurately represent those findings.\n",
+        "pseudo_code": "# Data validation logic for ECG abnormality description must be coded with a proper reference indicator.\n# Based on: QAD\u2011EG\u2011tests_outlier_detection\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    ECG Abnormalities:If the 'EGDESC' (ECG Description of finding) specifies certain ECG abnormalities and the 'EGNRIND' (Normal/Reference Range Indicator) is not null, then the 'EGNRIND' must contain a v...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['EGSTDTC', 'EGDESC', 'EGDTC', 'EGNRIND', 'EGORNRHI', 'EGORNRLO', 'EGORRES', 'EGPERF', 'EGTEST', 'EGORRESU', 'VISITNAME', 'EGPOS']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # ECG abnormality description must be coded with a proper reference indicator.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "The \"ECG Test Results \u2013 Result or Finding\" (EGORRES) across visits showing significant deviations from baseline Visit are flagged for review.",
+        "required_cdash_items": [
+          "EGSTDTC",
+          "EGDESC",
+          "EGDTC",
+          "EGNRIND",
+          "EGORNRHI",
+          "EGORNRLO",
+          "EGORRES",
+          "EGPERF",
+          "EGTEST",
+          "EGORRESU",
+          "VISITNAME",
+          "EGPOS"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Consistency with Baseline/Screening:The ECG results ('EGORRES') and their units ('EGORRESU', if available) for the same ECG test ('EGTEST') across all visits should not exceed the medically significant changes allowed from the baseline or screening record ('VISITNAME' = 'screening' or 'baseline') for 'EGORRES'.\nReported Adverse Events:Ensure that there are no ECG-related adverse events (AEs) reported within the relevant timeframe, as these may compromise the validity of the 'EGORRES' comparisons...",
+        "pseudo_code": "# Data validation logic for ECG results deviating significantly from baseline visit need review.\n# Based on: QAD\u2011EG\u2011tests_outlier_detection\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Consistency with Baseline/Screening:The ECG results ('EGORRES') and their units ('EGORRESU', if available) for the same ECG test ('EGTEST') across all visits should not exceed the medically significan...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['EGSTDTC', 'EGDESC', 'EGDTC', 'EGNRIND', 'EGORNRHI', 'EGORNRLO', 'EGORRES', 'EGPERF', 'EGTEST', 'EGORRESU', 'VISITNAME', 'EGPOS']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # ECG results deviating significantly from baseline visit need review.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "EG Tests Outlier Detection",
+    "description": "Clinical data quality scenarios for EG_MH domain validation",
+    "tag": "Tag(name='Other', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Reported Term for the Medical History\" (MHTERM) should match \"ECG Test Results \u2013 Description of Finding\" (EGDESC).",
+        "required_cdash_items": [
+          "EGMHNO",
+          "EGSTDTC",
+          "MHSTDTC",
+          "MHREFID",
+          "EGDESC",
+          "MHTERM",
+          "EGDTC",
+          "EGNRIND",
+          "EGORNRHI",
+          "EGORNRLO",
+          "EGORRES",
+          "EGPERF",
+          "EGTEST",
+          "MHCONTRT",
+          "MHDECOD",
+          "MHONGO",
+          "MHTOXGR",
+          "EGPOS",
+          "VISITNAME",
+          "EGCLSIG"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Terminology Consistency:If values in 'MHTERM' and 'EGDESC' are not null and 'MHTERM' (Medical History term) includes a condition related to ECG, then 'EGDESC' (ECG Description of finding) must use terminology that is consistent and aligned with the terms found in 'MHTERM'.\n",
+        "pseudo_code": "# Data validation logic for Medical\u2011history ECG condition should match ECG description.\n# Based on: QAD\u2011EG_MH\u2011tests_outlier_detection\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Terminology Consistency:If values in 'MHTERM' and 'EGDESC' are not null and 'MHTERM' (Medical History term) includes a condition related to ECG, then 'EGDESC' (ECG Description of finding) must use ter...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['EGMHNO', 'EGSTDTC', 'MHSTDTC', 'MHREFID', 'EGDESC', 'MHTERM', 'EGDTC', 'EGNRIND', 'EGORNRHI', 'EGORNRLO', 'EGORRES', 'EGPERF', 'EGTEST', 'MHCONTRT', 'MHDECOD', 'MHONGO', 'MHTOXGR', 'EGPOS', 'VISITNAME', 'EGCLSIG']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Medical\u2011history ECG condition should match ECG description.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Laboratory Tests Outlier Detection",
+    "description": "Clinical data quality scenarios for LB domain validation",
+    "tag": "Tag(name='Other', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Lab test Result or Finding\" (LBORRES) must be clinically reliable.",
+        "required_cdash_items": [
+          "LBSTDTC",
+          "LBCLSIG",
+          "LBDTC",
+          "LBLOC",
+          "LBORNRHI",
+          "LBORNRLO",
+          "LBORRES",
+          "LBORRESU",
+          "LBPERF",
+          "LBTEST",
+          "VISITNAME",
+          "LBCAT"
+        ],
+        "domains": [
+          "LB"
+        ],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Clinically reliable - The values recorded for 'LBTEST' (Laboratory Test) in 'LBORRES' (Laboratory Results), along with the units 'LBORRESU' (if available), must be Clinically reliable. This means that numeric results should fall within a range that aligns with normal human physiology. If the result is provided as free text, it must convey meaningful clinical insights and be explicitly validated as a qualitative assessment. Non-numeric values that provide valid qualitative information (e.g., \"no ...",
+        "pseudo_code": "# Data validation logic for Lab results must be physiologically plausible.\n# Based on: QAD\u2011LB\u2011lab_outlier_detection\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Clinically reliable - The values recorded for 'LBTEST' (Laboratory Test) in 'LBORRES' (Laboratory Results), along with the units 'LBORRESU' (if available), must be Clinically reliable. This means that...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['LBSTDTC', 'LBCLSIG', 'LBDTC', 'LBLOC', 'LBORNRHI', 'LBORNRLO', 'LBORRES', 'LBORRESU', 'LBPERF', 'LBTEST', 'VISITNAME', 'LBCAT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Lab results must be physiologically plausible.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "No extreme \"Lab test Result or Finding\" (LBORRES) variations over short periods.",
+        "required_cdash_items": [
+          "LBSTDTC",
+          "LBCLSIG",
+          "LBDTC",
+          "LBLOC",
+          "LBORNRHI",
+          "LBORNRLO",
+          "LBORRES",
+          "LBORRESU",
+          "LBPERF",
+          "LBTEST",
+          "VISITNAME",
+          "LBCAT"
+        ],
+        "domains": [
+          "LB"
+        ],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Consistency of Results:For the same Lab test('LBTEST'), the results ('LBORRES') should remain consistent and not exhibit extreme variations within a short time frame, especially when considering the units (LBORRESU) if available.\nRapid Fluctuations:Monitor for any rapid fluctuations in the result values. Significant changes occurring in a short period may suggest potential errors.\n",
+        "pseudo_code": "# Data validation logic for Same lab test should not swing wildly over short periods.\n# Based on: QAD\u2011LB\u2011lab_outlier_detection\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Consistency of Results:For the same Lab test('LBTEST'), the results ('LBORRES') should remain consistent and not exhibit extreme variations within a short time frame, especially when considering the u...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['LBSTDTC', 'LBCLSIG', 'LBDTC', 'LBLOC', 'LBORNRHI', 'LBORNRLO', 'LBORRES', 'LBORRESU', 'LBPERF', 'LBTEST', 'VISITNAME', 'LBCAT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Same lab test should not swing wildly over short periods.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "Inconsistent \"Lab test Original Units\" (LBORRESU) for the same test.",
+        "required_cdash_items": [
+          "LBSTDTC",
+          "LBCLSIG",
+          "LBDTC",
+          "LBLOC",
+          "LBORNRHI",
+          "LBORNRLO",
+          "LBORRES",
+          "LBORRESU",
+          "LBPERF",
+          "LBTEST",
+          "VISITNAME",
+          "LBCAT"
+        ],
+        "domains": [
+          "LB"
+        ],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Consistency of Units - The units of measurement for 'LBORRESU' (Lab Result Units) must be consistent for the same 'LBTEST' (Lab Test). All measurements should utilize the same unit to guarantee accurate comparison and interpretation. However, if the unit ('LBORRESU') is not available (i.e., is 'null'), then the record should not be evaluated for anomalies related to unit consistency.",
+        "pseudo_code": "# Data validation logic for Units must stay consistent for the same lab test.\n# Based on: QAD\u2011LB\u2011lab_outlier_detection\u2011001.03\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Consistency of Units - The units of measurement for 'LBORRESU' (Lab Result Units) must be consistent for the same 'LBTEST' (Lab Test). All measurements should utilize the same unit to guarantee accura...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['LBSTDTC', 'LBCLSIG', 'LBDTC', 'LBLOC', 'LBORNRHI', 'LBORNRLO', 'LBORRES', 'LBORRESU', 'LBPERF', 'LBTEST', 'VISITNAME', 'LBCAT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Units must stay consistent for the same lab test.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "\"Lab test Result or Finding\" (LBORRES) across visits should not vary > 10 % from baseline if no adverse events occurred.",
+        "required_cdash_items": [
+          "LBSTDTC",
+          "LBCLSIG",
+          "LBDTC",
+          "LBLOC",
+          "LBORNRHI",
+          "LBORNRLO",
+          "LBORRES",
+          "LBORRESU",
+          "LBPERF",
+          "LBTEST",
+          "VISITNAME",
+          "LBCAT"
+        ],
+        "domains": [
+          "LB"
+        ],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Baseline Percentage Variation:The lab results recorded in 'LBORRES' (Lab Result) should not vary by more than 10% above or 10% below the baseline value from the screening visit(VISITNAME = 'screening' or 'baseline'), applicable for the same lab test 'LBTEST' across all visits. The units of measurement 'LBORRESU' should be considered if available.\nNote: consider these guidelines and apply Chemistry (Na, Creatinine): \u00b1\u202f10\u202f% rule enforced.\nHematology (Hemoglobin): \u00b1\u202f20\u202f% allowed; >\u202f20\u202f% flagged.\nLi...",
+        "pseudo_code": "# Data validation logic for Lab results across visits should stay within 10 percent of baseline if no adverse event.\n# Based on: QAD\u2011LB\u2011lab_outlier_detection\u2011001.04\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Baseline Percentage Variation:The lab results recorded in 'LBORRES' (Lab Result) should not vary by more than 10% above or 10% below the baseline value from the screening visit(VISITNAME = 'screening'...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['LBSTDTC', 'LBCLSIG', 'LBDTC', 'LBLOC', 'LBORNRHI', 'LBORNRLO', 'LBORRES', 'LBORRESU', 'LBPERF', 'LBTEST', 'VISITNAME', 'LBCAT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Lab results across visits should stay within 10 percent of baseline if no adverse event.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Medical history consistency",
+    "description": "Clinical data quality scenarios for MH domain validation",
+    "tag": "Tag(name='Other', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Reported Term for the Medical History\" (MHTERM) should clearly specify disease type.",
+        "required_cdash_items": [
+          "MHSTDTC",
+          "MHCONTRT",
+          "MHDECOD",
+          "MHONGO",
+          "MHTERM",
+          "MHTOXGR",
+          "MHREFID"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Disease Specification:The Medical History term ('MHTERM') should provide an adequately detailed description of the disease or condition. While including further subtype or classification details is encouraged when clinically relevant, a more general description may be acceptable when additional specificity is not available. The level of detail should be guided by the clinical context to ensure clarity and relevance in the reported information",
+        "pseudo_code": "# Data validation logic for Medical\u2011history term should clearly state disease type.\n# Based on: QAD\u2011MH\u2011medical_history_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Disease Specification:The Medical History term ('MHTERM') should provide an adequately detailed description of the disease or condition. While including further subtype or classification details is en...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['MHSTDTC', 'MHCONTRT', 'MHDECOD', 'MHONGO', 'MHTERM', 'MHTOXGR', 'MHREFID']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Medical\u2011history term should clearly state disease type.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "\"Dictionary\u2011Derived Medical History Term\" (MHDECOD) should match MedDRA term for \"Reported Term for the Medical History\" (MHTERM).",
+        "required_cdash_items": [
+          "MHSTDTC",
+          "MHCONTRT",
+          "MHDECOD",
+          "MHONGO",
+          "MHTERM",
+          "MHTOXGR",
+          "MHREFID"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "MedDRA Dictionary Compliance \u2013 If the 'MHDECOD' (MedDRA Dictionary code) is provided and not null, it must correspond to the diagnosis described in 'MHTERM'. If 'MHDECOD' is missing or has a null value, no anomaly should be raised, in accordance with the expectation to ignore records with any null values. \nAcceptable variations include:\nSynonyms: For example, 'chronic hepatitis c' in MHDECOD and 'chronic HCV, g1a' in MHTERM may be considered equivalent. Abbreviations/Alternate Nomenclatures: For...",
+        "pseudo_code": "# Data validation logic for Dictionary medical\u2011history term must match free\u2011text term.\n# Based on: QAD\u2011MH\u2011medical_history_consistency\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    MedDRA Dictionary Compliance \u2013 If the 'MHDECOD' (MedDRA Dictionary code) is provided and not null, it must correspond to the diagnosis described in 'MHTERM'. If 'MHDECOD' is missing or has a null valu...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['MHSTDTC', 'MHCONTRT', 'MHDECOD', 'MHONGO', 'MHTERM', 'MHTOXGR', 'MHREFID']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Dictionary medical\u2011history term must match free\u2011text term.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Medical history consistency",
+    "description": "Clinical data quality scenarios for MH_PE domain validation",
+    "tag": "Tag(name='Other', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "When the exam result \"Verbatim\u00a0Examination\u00a0Finding\" (PEORRES) is below the normal low limit \"Physical\u00a0Examination\u00a0\u2013\u00a0Normal\u00a0Range\u00a0Lower\u00a0Limit\u2011Original\u00a0Units\" (PEORNRLO), the finding\u2019s description \"Physical\u00a0Examination\u00a0\u2013\u00a0Description\u00a0of\u00a0Finding\" (PEDESC) must align as the medical\u2011history term (MHTERM).",
+        "required_cdash_items": [
+          "MHREFID",
+          "MHSTDTC",
+          "PESTDTC",
+          "PEMHNO",
+          "MHTERM",
+          "PEDESC",
+          "MHCONTRT",
+          "MHDECOD",
+          "MHONGO",
+          "PECAT",
+          "PECLSIG",
+          "PEDTC",
+          "PEORNRHI",
+          "PEORNRLO",
+          "PEORRES",
+          "PEORRESU",
+          "PETEST"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Value Comparison:If values in 'PEORRES', 'PEORNRLO', 'PEDESC' and 'MHTERM' are not null, and Physical Examination results ('PEORRES') is below the lower limit specified in 'PEORNRLO' for the Physical Examination test in 'PETEST'(if not null) with corresponding units if present in 'PEORRESU', then there must be consistency between the description of the finding ('PEDESC') and the term stated in the medical history ('MHTERM').\n",
+        "pseudo_code": "# Data validation logic for Low physical exam result should be reflected in exam description and medical history.\n# Based on: QAD\u2011MH_PE\u2011medical_history_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Value Comparison:If values in 'PEORRES', 'PEORNRLO', 'PEDESC' and 'MHTERM' are not null, and Physical Examination results ('PEORRES') is below the lower limit specified in 'PEORNRLO' for the Physical ...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['MHREFID', 'MHSTDTC', 'PESTDTC', 'PEMHNO', 'MHTERM', 'PEDESC', 'MHCONTRT', 'MHDECOD', 'MHONGO', 'PECAT', 'PECLSIG', 'PEDTC', 'PEORNRHI', 'PEORNRLO', 'PEORRES', 'PEORRESU', 'PETEST']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Low physical exam result should be reflected in exam description and medical history.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "When PEORRES is above the normal high limit \"Physical\u00a0Examination\u00a0\u2013\u00a0Normal\u00a0Range\u00a0Upper\u00a0Limit\u2011Original\u00a0Units\" (PEORNRHI), PEDESC must match the medical\u2011history term MHTERM.",
+        "required_cdash_items": [
+          "MHREFID",
+          "MHSTDTC",
+          "PESTDTC",
+          "PEMHNO",
+          "MHTERM",
+          "PEDESC",
+          "MHCONTRT",
+          "MHDECOD",
+          "MHONGO",
+          "PECAT",
+          "PECLSIG",
+          "PEDTC",
+          "PEORNRHI",
+          "PEORNRLO",
+          "PEORRES",
+          "PEORRESU",
+          "PETEST"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Value Comparison:If values in 'PEORRES', 'PEORNRHI','PEDESC' and 'MHTERM' are not null, and Physical Examination results ('PEORRES') exceed the upper limit ('PEORNRHI') or the Physical Examination test in 'PETEST' (if not null) with corresponding units if present in 'PEORRESU', then the description of the finding ('PEDESC') must correspond with the specified medical history term ('MHTERM').\nConsistency Requirement:It is essential to ensure that 'PEDESC' remains consistent with 'MHTERM' whenever ...",
+        "pseudo_code": "# Data validation logic for High physical exam result should match description and medical history.\n# Based on: QAD\u2011MH_PE\u2011medical_history_consistency\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Value Comparison:If values in 'PEORRES', 'PEORNRHI','PEDESC' and 'MHTERM' are not null, and Physical Examination results ('PEORRES') exceed the upper limit ('PEORNRHI') or the Physical Examination tes...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['MHREFID', 'MHSTDTC', 'PESTDTC', 'PEMHNO', 'MHTERM', 'PEDESC', 'MHCONTRT', 'MHDECOD', 'MHONGO', 'PECAT', 'PECLSIG', 'PEDTC', 'PEORNRHI', 'PEORNRLO', 'PEORRES', 'PEORRESU', 'PETEST']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # High physical exam result should match description and medical history.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Medical history consistency",
+    "description": "Clinical data quality scenarios for MH_PR domain validation",
+    "tag": "Tag(name='Other', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "When both \"Reported\u00a0Name\u00a0of\u00a0Procedure\" (PRTRT) and \"Reported\u00a0Term\u00a0for\u00a0the\u00a0Medical\u00a0History\" (MHTERM) are present, the procedure must be clinically appropriate for that medical\u2011history term.",
+        "required_cdash_items": [
+          "MHPRNO",
+          "MHSTDTC",
+          "PRSTDTC",
+          "PRMHNO",
+          "MHTERM",
+          "PRTRT",
+          "MHCONTRT",
+          "MHDECOD",
+          "MHONGO",
+          "PRDTC",
+          "PRPERF",
+          "PRSTAT"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Clinical Relevance:When the values in 'PRTRT' and 'MHTERM' are not null, then 'PRTRT' (Procedure Treatment) must be clinically relevant to the corresponding 'MHTERM' (Medical History Term). This ensures that the treatment is appropriately aligned with the medical history provided.\n",
+        "pseudo_code": "# Data validation logic for Procedure must suit the medical\u2011history condition.\n# Based on: QAD\u2011MH_PR\u2011medical_history_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Clinical Relevance:When the values in 'PRTRT' and 'MHTERM' are not null, then 'PRTRT' (Procedure Treatment) must be clinically relevant to the corresponding 'MHTERM' (Medical History Term). This ensur...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['MHPRNO', 'MHSTDTC', 'PRSTDTC', 'PRMHNO', 'MHTERM', 'PRTRT', 'MHCONTRT', 'MHDECOD', 'MHONGO', 'PRDTC', 'PRPERF', 'PRSTAT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Procedure must suit the medical\u2011history condition.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "Whenever MHTERM points to a procedure, \"Medical\u00a0History\u00a0Related\u00a0Procedure\u00a0ID\" (MHPRNO) must be filled in, and a matching procedure record must exist.",
+        "required_cdash_items": [
+          "MHPRNO",
+          "MHSTDTC",
+          "PRSTDTC",
+          "PRMHNO",
+          "MHTERM",
+          "PRTRT",
+          "MHCONTRT",
+          "MHDECOD",
+          "MHONGO",
+          "PRDTC",
+          "PRPERF",
+          "PRSTAT"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Consistency with Procedures:If the Medical History term 'MHTERM' is not null and associated with a specific procedure, the 'MHPRNO' (Related Procedure Id) must be provided and cannot be null.\nProcedure Record Requirement:There must be an available and relevant procedure record in the database to substantiate the relationship between the Medical History term and the procedure.\n",
+        "pseudo_code": "# Data validation logic for If history term mentions a procedure, related procedure ID must exist.\n# Based on: QAD\u2011MH_PR\u2011medical_history_consistency\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Consistency with Procedures:If the Medical History term 'MHTERM' is not null and associated with a specific procedure, the 'MHPRNO' (Related Procedure Id) must be provided and cannot be null.\nProcedur...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['MHPRNO', 'MHSTDTC', 'PRSTDTC', 'PRMHNO', 'MHTERM', 'PRTRT', 'MHCONTRT', 'MHDECOD', 'MHONGO', 'PRDTC', 'PRPERF', 'PRSTAT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # If history term mentions a procedure, related procedure ID must exist.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Physical examination consistency",
+    "description": "Clinical data quality scenarios for PE domain validation",
+    "tag": "Tag(name='Other', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Physical Examination Description\" (PEDESC) must align with \"Verbatim Finding\" (PEORRES).",
+        "required_cdash_items": [
+          "PESTDTC",
+          "PECAT",
+          "PECLSIG",
+          "PEDESC",
+          "PEDTC",
+          "PEORNRHI",
+          "PEORNRLO",
+          "PEORRES",
+          "PEORRESU",
+          "PETEST"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Consistency Check:The values recorded in 'PEDESC' (Description of finding) must correspond with the Physical Examination results documented in 'PEORRES' for the Physical Examination test in 'PETEST'(if not null) with corresponding units if present in 'PEORRESU'. Any inconsistencies between these data points require further investigation.\n",
+        "pseudo_code": "# Data validation logic for Physical exam description must match the specific finding value.\n# Based on: QAD\u2011PE\u2011physical_exam_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Consistency Check:The values recorded in 'PEDESC' (Description of finding) must correspond with the Physical Examination results documented in 'PEORRES' for the Physical Examination test in 'PETEST'(i...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['PESTDTC', 'PECAT', 'PECLSIG', 'PEDESC', 'PEDTC', 'PEORNRHI', 'PEORNRLO', 'PEORRES', 'PEORRESU', 'PETEST']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Physical exam description must match the specific finding value.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "\"Original Units\" (PEORRESU) should align with units for \"Body System Examined\" (PETEST).",
+        "required_cdash_items": [
+          "PESTDTC",
+          "PECAT",
+          "PECLSIG",
+          "PEDESC",
+          "PEDTC",
+          "PEORNRHI",
+          "PEORNRLO",
+          "PEORRES",
+          "PEORRESU",
+          "PETEST"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Unit Consistency:The units for Physical Examination Results ('PEORRESU') must accurately correspond to the specific Body System Examined as indicated by 'PETEST'.\nTest Alignment:Ensure that the units used in 'PEORRESU' align correctly with those specified for the corresponding 'PETEST'.\n",
+        "pseudo_code": "# Data validation logic for Units recorded must fit the body system examined.\n# Based on: QAD\u2011PE\u2011physical_exam_consistency\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Unit Consistency:The units for Physical Examination Results ('PEORRESU') must accurately correspond to the specific Body System Examined as indicated by 'PETEST'.\nTest Alignment:Ensure that the units ...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['PESTDTC', 'PECAT', 'PECLSIG', 'PEDESC', 'PEDTC', 'PEORNRHI', 'PEORNRLO', 'PEORRES', 'PEORRESU', 'PETEST']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Units recorded must fit the body system examined.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "Both \"Normal Range Upper Limit (Orig Units)\" (PEORNRHI) and \"Normal Range Lower Limit (Orig Units)\" (PEORNRLO) must be realistic for the body system examined.",
+        "required_cdash_items": [
+          "PESTDTC",
+          "PECAT",
+          "PECLSIG",
+          "PEDESC",
+          "PEDTC",
+          "PEORNRHI",
+          "PEORNRLO",
+          "PEORRES",
+          "PEORRESU",
+          "PETEST"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Valid Range Representation:When both the upper limit ('PEORNRLO') and the lower limit ('PEORNRHI') are provided, they must define a valid range for 'PETEST' (Body System Examined) along with the corresponding finding that is being reported.\n",
+        "pseudo_code": "# Data validation logic for Normal range limits must be realistic for that body system.\n# Based on: QAD\u2011PE\u2011physical_exam_consistency\u2011001.03\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Valid Range Representation:When both the upper limit ('PEORNRLO') and the lower limit ('PEORNRHI') are provided, they must define a valid range for 'PETEST' (Body System Examined) along with the corre...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['PESTDTC', 'PECAT', 'PECLSIG', 'PEDESC', 'PEDTC', 'PEORNRHI', 'PEORNRLO', 'PEORRES', 'PEORRESU', 'PETEST']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Normal range limits must be realistic for that body system.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "\"Physical Examination Clinical Significance\" (PECLSIG) recorded must match the described findings and normal ranges.",
+        "required_cdash_items": [
+          "PESTDTC",
+          "PECAT",
+          "PECLSIG",
+          "PEDESC",
+          "PEDTC",
+          "PEORNRHI",
+          "PEORNRLO",
+          "PEORRES",
+          "PEORRESU",
+          "PETEST"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Interpretation Consistency:'PECLSIG' (Physical Examination Clinical Significance) must align with the interpretations in 'PEDESC' (Description of finding) to ensure that clinical findings are consistent.\nExpected Normal Range:The values for 'PECLSIG' should, where applicable, fall within the expected normal range to verify that the results meet acceptable thresholds.\n",
+        "pseudo_code": "# Data validation logic for Clinical\u2011significance flag must agree with findings and ranges.\n# Based on: QAD\u2011PE\u2011physical_exam_consistency\u2011001.04\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Interpretation Consistency:'PECLSIG' (Physical Examination Clinical Significance) must align with the interpretations in 'PEDESC' (Description of finding) to ensure that clinical findings are consiste...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['PESTDTC', 'PECAT', 'PECLSIG', 'PEDESC', 'PEDTC', 'PEORNRHI', 'PEORNRLO', 'PEORRES', 'PEORRESU', 'PETEST']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Clinical\u2011significance flag must agree with findings and ranges.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "\"Physical Examination Clinical Significance\" (PECLSIG) is recorded, an explanation must be provided.",
+        "required_cdash_items": [
+          "PESTDTC",
+          "PECAT",
+          "PECLSIG",
+          "PEDESC",
+          "PEDTC",
+          "PEORNRHI",
+          "PEORNRLO",
+          "PEORRES",
+          "PEORRESU",
+          "PETEST"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Explanation Requirement:If 'PECLSIG' (Physical Examination Clinical Significance) is marked as 'yes' or 'significant', it is mandatory to provide a corresponding explanation or description in 'PEDESC' (Description of finding).\n",
+        "pseudo_code": "# Data validation logic for When clinical significance is flagged, an explanatory description is required.\n# Based on: QAD\u2011PE\u2011physical_exam_consistency\u2011001.05\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Explanation Requirement:If 'PECLSIG' (Physical Examination Clinical Significance) is marked as 'yes' or 'significant', it is mandatory to provide a corresponding explanation or description in 'PEDESC'...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['PESTDTC', 'PECAT', 'PECLSIG', 'PEDESC', 'PEDTC', 'PEORNRHI', 'PEORNRLO', 'PEORRES', 'PEORRESU', 'PETEST']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # When clinical significance is flagged, an explanatory description is required.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Tumor Response-Procedure consistency",
+    "description": "Clinical data quality scenarios for PR_TR domain validation",
+    "tag": "Tag(name='Other', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Method Used to Identify\" (TRMETHOD) should be clinically relevant to \"Reported Name of Procedure\" (PRTRT).",
+        "required_cdash_items": [
+          "PRREFID",
+          "PRSTDTC",
+          "TRSTDTC",
+          "TRPRNO",
+          "PRTRT",
+          "TRDESC",
+          "PRDTC",
+          "PRPERF",
+          "PRSTAT",
+          "TRANTREG",
+          "TRBODSYS",
+          "TRLNKID",
+          "TRLOC",
+          "TRMETHOD",
+          "TRTEST"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Clinical Relevance:If both 'TRMETHOD' (Method Used to Identify the Tumor/Lesion) and 'PRTRT' (Procedure) have values that are not null, the 'TRMETHOD' must be clinically relevant to either the diagnosis, treatment planning, or execution of the procedure recorded in 'PRTRT'. If no direct or indirect relevance exists, clarification or correction is required.",
+        "pseudo_code": "# Data validation logic for Method used to identify lesion must suit the reported procedure.\n# Based on: QAD\u2011PR_TR\u2011tumor_response_proc_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Clinical Relevance:If both 'TRMETHOD' (Method Used to Identify the Tumor/Lesion) and 'PRTRT' (Procedure) have values that are not null, the 'TRMETHOD' must be clinically relevant to either the diagnos...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['PRREFID', 'PRSTDTC', 'TRSTDTC', 'TRPRNO', 'PRTRT', 'TRDESC', 'PRDTC', 'PRPERF', 'PRSTAT', 'TRANTREG', 'TRBODSYS', 'TRLNKID', 'TRLOC', 'TRMETHOD', 'TRTEST']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Method used to identify lesion must suit the reported procedure.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Tumor-Procedure consistency",
+    "description": "Clinical data quality scenarios for PR_TU domain validation",
+    "tag": "Tag(name='Other', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Method of Identification\" (TUMETHOD) should be consistant with \"Reported Name of Procedure\" (PRTRT) ",
+        "required_cdash_items": [
+          "PRREFID",
+          "PRSTDTC",
+          "TUSTDTC",
+          "TUPRNO",
+          "PRTRT",
+          "TUDESC",
+          "PRDTC",
+          "PRPERF",
+          "PRSTAT",
+          "TUANTREG",
+          "TUBODSYS",
+          "TULNKID",
+          "TULOC",
+          "TUMETHOD"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Clinical Relevance:If both 'TUMETHOD' (Method Used to Identify the Condition) and 'PRTRT' (Procedure) have values that are not null, the 'TUMETHOD' must be clinically relevant to either the diagnosis, treatment planning, or execution of the procedure recorded in 'PRTRT'. If no direct or indirect relevance exists, clarification or correction is required.",
+        "pseudo_code": "# Data validation logic for Identification method must align with the procedure in tumour identification records.\n# Based on: QAD\u2011PR_TU\u2011tumor_proc_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Clinical Relevance:If both 'TUMETHOD' (Method Used to Identify the Condition) and 'PRTRT' (Procedure) have values that are not null, the 'TUMETHOD' must be clinically relevant to either the diagnosis,...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['PRREFID', 'PRSTDTC', 'TUSTDTC', 'TUPRNO', 'PRTRT', 'TUDESC', 'PRDTC', 'PRPERF', 'PRSTAT', 'TUANTREG', 'TUBODSYS', 'TULNKID', 'TULOC', 'TUMETHOD']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Identification method must align with the procedure in tumour identification records.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Tumor response consistency",
+    "description": "Clinical data quality scenarios for TR domain validation",
+    "tag": "Tag(name='Other', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "If the tumour \"Location Used\" (TRLOC) is a lymph node, \"Tumor/Lesion Assessment Test Name\" (TRTEST) shouldn\u2019t include \u201cLongest diameter.\u201d",
+        "required_cdash_items": [
+          "TRSTDTC",
+          "TRANTREG",
+          "TRBODSYS",
+          "TRDESC",
+          "TRLNKID",
+          "TRLOC",
+          "TRMETHOD",
+          "TRTEST",
+          "TRDESC",
+          "TRCAT"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Consistency Check:If 'TRLOC' (Tumor/Lesion Location) is identified as 'Lymph node', then the corresponding Assessment Test in 'TRTEST' must not include the value 'Longest diameter'.\n",
+        "pseudo_code": "# Data validation logic for For lymph nodes, the test name must not mention longest diameter.\n# Based on: QAD\u2011TR\u2011tumor_response_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Consistency Check:If 'TRLOC' (Tumor/Lesion Location) is identified as 'Lymph node', then the corresponding Assessment Test in 'TRTEST' must not include the value 'Longest diameter'.\n...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['TRSTDTC', 'TRANTREG', 'TRBODSYS', 'TRDESC', 'TRLNKID', 'TRLOC', 'TRMETHOD', 'TRTEST', 'TRDESC', 'TRCAT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # For lymph nodes, the test name must not mention longest diameter.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "\"Tumor/Lesion Results - Location Used for the Measurement\" (TRLOC) should be consistent with the recorded anatomical region.",
+        "required_cdash_items": [
+          "TRSTDTC",
+          "TRANTREG",
+          "TRBODSYS",
+          "TRDESC",
+          "TRLNKID",
+          "TRLOC",
+          "TRMETHOD",
+          "TRTEST",
+          "TRDESC",
+          "TRCAT"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Anatomical Consistency:The Location ('TRLOC') must correspond with the anatomical details documented in 'TRANTREG'. Any inconsistencies between these two fields may suggest possible errors in data entry or reporting.\n",
+        "pseudo_code": "# Data validation logic for Lesion location text must align with coded anatomical region.\n# Based on: QAD\u2011TR\u2011tumor_response_consistency\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Anatomical Consistency:The Location ('TRLOC') must correspond with the anatomical details documented in 'TRANTREG'. Any inconsistencies between these two fields may suggest possible errors in data ent...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['TRSTDTC', 'TRANTREG', 'TRBODSYS', 'TRDESC', 'TRLNKID', 'TRLOC', 'TRMETHOD', 'TRTEST', 'TRDESC', 'TRCAT']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Lesion location text must align with coded anatomical region.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Tumor identification consistency",
+    "description": "Clinical data quality scenarios for TU domain validation",
+    "tag": "Tag(name='Other', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "\"Location of the Tumor/Lesion\" (TULOC) must align anatomically with the reference region.",
+        "required_cdash_items": [
+          "TUSTDTC",
+          "TUANTREG",
+          "TUBODSYS",
+          "TULNKID",
+          "TULOC",
+          "TUMETHOD",
+          "TUDESC"
+        ],
+        "domains": [],
+        "tag": "Tag(name='Other', color='light text-dark')",
+        "reasoning_template": "Anatomical Consistency:The location of the tumor or lesion ('TULOC') must be anatomically consistent with the anatomical region indicated in 'TUANTREG'. This requires that the anatomical placement of 'TULOC' aligns correctly with the reference provided by 'TUANTREG'.\n",
+        "pseudo_code": "# Data validation logic for Tumour location must align with its coded anatomical region.\n# Based on: QAD\u2011TU\u2011tumor_identification_consistency\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Anatomical Consistency:The location of the tumor or lesion ('TULOC') must be anatomically consistent with the anatomical region indicated in 'TUANTREG'. This requires that the anatomical placement of ...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['TUSTDTC', 'TUANTREG', 'TUBODSYS', 'TULNKID', 'TULOC', 'TUMETHOD', 'TUDESC']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Tumour location must align with its coded anatomical region.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Vitals outliers detection",
+    "description": "Clinical data quality scenarios for VS domain validation",
+    "tag": "Tag(name='Data Quality', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "Vital\u2011sign \"Result or Finding\" (VSORRES) should be realistic and Clinically relavent.",
+        "required_cdash_items": [
+          "VSSTDTC",
+          "VSCLSIG",
+          "VSDTC",
+          "VSORNRHI",
+          "VSORNRLO",
+          "VSORRES",
+          "VSORRESU",
+          "VSPERF",
+          "VSTEST",
+          "VISITNAME"
+        ],
+        "domains": [
+          "VS"
+        ],
+        "tag": "Tag(name='Data Quality', color='light text-dark')",
+        "reasoning_template": "Clinically reliable:For values recorded for the Vital Signs test 'VSTEST' in 'VSORRES' (Vital Signs Results), along with 'VSORRESU' (Vital Signs - Original Units), must be within a Clinically reliable range based on established clinical norms for that specific test. Use the following guidelines (adjusting for additional vital signs as needed as per age group):\nHeart Rate: Typical range 60\u2013100 beats/min.\nBlood Pressure: Validate systolic and diastolic values using appropriate ranges (e.g., systol...",
+        "pseudo_code": "# Data validation logic for Vital\u2011sign results must be realistic and clinically plausible.\n# Based on: QAD\u2011VS\u2011vital_outlier_detection\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Clinically reliable:For values recorded for the Vital Signs test 'VSTEST' in 'VSORRES' (Vital Signs Results), along with 'VSORRESU' (Vital Signs - Original Units), must be within a Clinically reliable...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['VSSTDTC', 'VSCLSIG', 'VSDTC', 'VSORNRHI', 'VSORNRLO', 'VSORRES', 'VSORRESU', 'VSPERF', 'VSTEST', 'VISITNAME']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Vital\u2011sign results must be realistic and clinically plausible.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "Vital\u2011sign \"Result or Finding\" (VSORRES) should remain consistent without sudden extreme changes \u2264 24 h and should not have negative values.",
+        "required_cdash_items": [
+          "VSSTDTC",
+          "VSCLSIG",
+          "VSDTC",
+          "VSORNRHI",
+          "VSORNRLO",
+          "VSORRES",
+          "VSORRESU",
+          "VSPERF",
+          "VSTEST",
+          "VISITNAME"
+        ],
+        "domains": [
+          "VS"
+        ],
+        "tag": "Tag(name='Data Quality', color='light text-dark')",
+        "reasoning_template": "Consistency of Results:\nFor the Vital Signs test (VSTEST), the results (VSORRES) should remain stable and not exhibit extreme variations within a 24-hour period. Use the following guidelines (adjusting for additional vital signs as needed):\nSystolic blood pressure: up to 10\u201320 mmHg\nDiastolic blood pressure: up to 5\u201310 mmHg\nHeart rate: about 10\u201315 beats per minute\nBody temperature: approximately 0.5\u00b0C\nRespiratory rate: greater than or equal to 5 breaths per minute\nRapid Fluctuations: Be vigilant ...",
+        "pseudo_code": "# Data validation logic for Vital\u2011sign results should not swing extremely within 24 hours and cannot be negative.\n# Based on: QAD\u2011VS\u2011vital_outlier_detection\u2011001.02\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Consistency of Results:\nFor the Vital Signs test (VSTEST), the results (VSORRES) should remain stable and not exhibit extreme variations within a 24-hour period. Use the following guidelines (adjustin...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['VSSTDTC', 'VSCLSIG', 'VSDTC', 'VSORNRHI', 'VSORNRLO', 'VSORRES', 'VSORRESU', 'VSPERF', 'VSTEST', 'VISITNAME']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Vital\u2011sign results should not swing extremely within 24 hours and cannot be negative.\n    \n    return violations\n"
+      },
+      {
+        "scenario_text": "Vital signs \"Result or Finding\" (VSORRES) should not deviate > 10 % from baseline/screening Visit",
+        "required_cdash_items": [
+          "VSSTDTC",
+          "VSCLSIG",
+          "VSDTC",
+          "VSORNRHI",
+          "VSORNRLO",
+          "VSORRES",
+          "VSORRESU",
+          "VSPERF",
+          "VSTEST",
+          "VISITNAME"
+        ],
+        "domains": [
+          "VS"
+        ],
+        "tag": "Tag(name='Data Quality', color='light text-dark')",
+        "reasoning_template": "VISTNAME Baseline Percentage Variation:The 'VSORRES' (Vital Signs Result) recorded across all 'VISITNAME' for the same Vital Signs test ('VSTEST') should not vary by more than 10% above or below the 'VSORRES' value from the 'VISITNAME' Visit labeled as 'screening' or 'baseline', This comparison must be conducted only when the units ('VSORRESU') are not null and are consistent across visits.\n",
+        "pseudo_code": "# Data validation logic for Vital\u2011signs across visits should stay within 10 percent of baseline if no adverse event.\n# Based on: QAD\u2011VS\u2011vital_outlier_detection\u2011001.03\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    VISTNAME Baseline Percentage Variation:The 'VSORRES' (Vital Signs Result) recorded across all 'VISITNAME' for the same Vital Signs test ('VSTEST') should not vary by more than 10% above or below the '...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['VSSTDTC', 'VSCLSIG', 'VSDTC', 'VSORNRHI', 'VSORNRLO', 'VSORRES', 'VSORRESU', 'VSPERF', 'VSTEST', 'VISITNAME']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Vital\u2011signs across visits should stay within 10 percent of baseline if no adverse event.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Monitoring abnormal results post Drug administration",
+    "description": "Clinical data quality scenarios for EX_LB domain validation",
+    "tag": "Tag(name='Compliance', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "Highlight abnormal results within 24 h after drug administration.",
+        "required_cdash_items": [
+          "LBDTC",
+          "EXSTDTC",
+          "EXREFID",
+          "LBREFID",
+          "LBORRES",
+          "LBORNRHI",
+          "LBORNRLO",
+          "LBCLSIG",
+          "VISITNAME",
+          "LBTEST",
+          "LBCAT",
+          "LBORRESU",
+          "LBPERF"
+        ],
+        "domains": [
+          "LB",
+          "EX"
+        ],
+        "tag": "Tag(name='Compliance', color='light text-dark')",
+        "reasoning_template": "Timeliness of Lab Records:If the values in 'LBDTC', 'EXSTDTC', and 'LBORRES' are not null, and Lab collection datetime ('LBDTC') is within 24 hours after the drug administration datetime ('EXSTDTC'), then: if 'LBORNRHI' and 'LBORNRLO' are not null, the result ('LBORRES') for the Lab test in ('LBTEST') must remain within the established normal limits in corresponding units ('LBORRESU').\nIf 'LBORNRHI' and 'LBORNRLO' are null, the result ('LBORRES') will be considered abnormal if it falls outside o...",
+        "pseudo_code": "# Data validation logic for Abnormal lab results within 24 hours after drug administration must be highlighted.\n# Based on: QAD\u2011EX_LB\u2011abnormal_results_24h\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Timeliness of Lab Records:If the values in 'LBDTC', 'EXSTDTC', and 'LBORRES' are not null, and Lab collection datetime ('LBDTC') is within 24 hours after the drug administration datetime ('EXSTDTC'), ...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['LBDTC', 'EXSTDTC', 'EXREFID', 'LBREFID', 'LBORRES', 'LBORNRHI', 'LBORNRLO', 'LBCLSIG', 'VISITNAME', 'LBTEST', 'LBCAT', 'LBORRESU', 'LBPERF']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Abnormal lab results within 24 hours after drug administration must be highlighted.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Monitoring abnormal results post Drug administration",
+    "description": "Clinical data quality scenarios for EX_VS domain validation",
+    "tag": "Tag(name='Compliance', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "Highlight abnormal results within 24 h after drug administration.",
+        "required_cdash_items": [
+          "VSDTC",
+          "EXSTDTC",
+          "EXREFID",
+          "VSREFID",
+          "VSORRES",
+          "VSORNRHI",
+          "VSORNRLO",
+          "VSCLSIG",
+          "VISITNAME",
+          "VSTEST",
+          "VSORRESU",
+          "VSPERF"
+        ],
+        "domains": [
+          "VS",
+          "EX"
+        ],
+        "tag": "Tag(name='Compliance', color='light text-dark')",
+        "reasoning_template": "\"Temporal Consistency: If the values in 'VSDTC', 'EXSTDTC', and 'VSORRES' are not null, and Vital Signs collection date ('VSDTC') is within 24 hours after the drug administration date ('EXSTDTC'), then:\nIf 'VSORNRHI' and 'VSORNRLO' are not null, the result ('VSORRES') for the Vital Signs test in ('VSTEST') must remain within the clincially established normal limits in corresponding units ('VSORRESU').\nIf 'VSORNRHI' and 'VSORNRLO' are null, the result ('VSORRES') will be considered abnormal if it...",
+        "pseudo_code": "# Data validation logic for Abnormal vital signs within 24 hours post\u2011dose must be highlighted.\n# Based on: QAD\u2011EX_VS\u2011abnormal_results_24h\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    \"Temporal Consistency: If the values in 'VSDTC', 'EXSTDTC', and 'VSORRES' are not null, and Vital Signs collection date ('VSDTC') is within 24 hours after the drug administration date ('EXSTDTC'), the...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['VSDTC', 'EXSTDTC', 'EXREFID', 'VSREFID', 'VSORRES', 'VSORNRHI', 'VSORNRLO', 'VSCLSIG', 'VISITNAME', 'VSTEST', 'VSORRESU', 'VSPERF']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Abnormal vital signs within 24 hours post\u2011dose must be highlighted.\n    \n    return violations\n"
+      }
+    ]
+  },
+  {
+    "name": "Monitoring abnormal results post Drug administration",
+    "description": "Clinical data quality scenarios for EX_EG domain validation",
+    "tag": "Tag(name='Compliance', color='light text-dark')",
+    "children": [
+      {
+        "scenario_text": "Highlight abnormal results within 24 h after drug administration.",
+        "required_cdash_items": [
+          "EGDTC",
+          "EXSTDTC",
+          "EXREFID",
+          "EGREFID",
+          "EGORRES",
+          "EGORNRHI",
+          "EGORNRLO",
+          "EGCLSIG",
+          "VISITNAME",
+          "EGPOS",
+          "EGTEST",
+          "EGORRESU",
+          "EGPOS",
+          "EGPERF"
+        ],
+        "domains": [
+          "EX"
+        ],
+        "tag": "Tag(name='Compliance', color='light text-dark')",
+        "reasoning_template": "Timing of ECG Record:If the values in 'EGDTC', 'EXSTDTC', and 'EGORRES' are not null, and Examination collection datetime ('EGDTC') is within 24 hours after the drug administration datetime ('EXSTDTC'), then:\nIf 'EGORNRHI' and 'EGORNRLO' are not null, the result ('EGORRES') for the Examination test in ('EGTEST') must remain within the established normal limits in corresponding units ('EGORRESU').\nIf 'EGORNRHI' and 'EGORNRLO' are null, the result ('EGORRES') will be considered abnormal if it fall...",
+        "pseudo_code": "# Data validation logic for Abnormal ECG results within 24 hours post\u2011dose must be highlighted.\n# Based on: QAD\u2011EX_EG\u2011abnormal_results_24h\u2011001.01\u2011v1.0\n\ndef validate_scenario(data):\n    \"\"\"\n    Timing of ECG Record:If the values in 'EGDTC', 'EXSTDTC', and 'EGORRES' are not null, and Examination collection datetime ('EGDTC') is within 24 hours after the drug administration datetime ('EXSTDTC'...\n    \"\"\"\n    violations = []\n    \n    # Check required columns exist\n    required_cols = ['EGDTC', 'EXSTDTC', 'EXREFID', 'EGREFID', 'EGORRES', 'EGORNRHI', 'EGORNRLO', 'EGCLSIG', 'VISITNAME', 'EGPOS', 'EGTEST', 'EGORRESU', 'EGPOS', 'EGPERF']\n    for col in required_cols:\n        if col not in data.columns:\n            violations.append(f\"Missing required column: {col}\")\n            return violations\n    \n    # Add specific validation logic here\n    # Abnormal ECG results within 24 hours post\u2011dose must be highlighted.\n    \n    return violations\n"
+      }
+    ]
+  }
+]

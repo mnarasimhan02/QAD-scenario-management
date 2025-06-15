@@ -1,0 +1,627 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs" id="scenarioTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {{ 'active' if current_tab == 'ootb' else '' }}" 
+                        id="ootb-tab" data-bs-toggle="tab" data-bs-target="#ootb" 
+                        type="button" role="tab" onclick="switchTab('ootb')">
+                    <i class="fas fa-box me-2"></i>
+                    Out of the Box Scenarios
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {{ 'active' if current_tab == 'create' else '' }}" 
+                        id="create-tab" data-bs-toggle="tab" data-bs-target="#create" 
+                        type="button" role="tab" onclick="switchTab('create')">
+                    <i class="fas fa-plus-circle me-2"></i>
+                    Create Scenario
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {{ 'active' if current_tab == 'recommend' else '' }}" 
+                        id="recommend-tab" data-bs-toggle="tab" data-bs-target="#recommend" 
+                        type="button" role="tab" onclick="switchTab('recommend')">
+                    <i class="fas fa-lightbulb me-2"></i>
+                    Recommend Scenario
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link {{ 'active' if current_tab == 'drp' else '' }}" 
+                        id="drp-tab" data-bs-toggle="tab" data-bs-target="#drp" 
+                        type="button" role="tab" onclick="switchTab('drp')">
+                    <i class="fas fa-file-csv me-2"></i>
+                    DRP Management
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="scenarioTabContent">
+            <!-- Out of the Box Scenarios Tab -->
+            <div class="tab-pane fade {{ 'show active' if current_tab == 'ootb' else '' }}" 
+                 id="ootb" role="tabpanel">
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-box me-2"></i>
+                                    Out of the Box Scenarios
+                                </h5>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- Search and Filter Form -->
+                                <form method="GET" class="row g-2">
+                                    <input type="hidden" name="tab" value="ootb">
+                                    <div class="col-md-4">
+                                        <input type="text" class="form-control form-control-sm" 
+                                               name="search" placeholder="Search scenarios..." 
+                                               value="{{ search_query }}">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select form-select-sm" name="tag">
+                                            <option value="">All Tags</option>
+                                            {% for tag in all_tags %}
+                                                <option value="{{ tag }}" {{ 'selected' if tag == tag_filter else '' }}>
+                                                    {{ tag }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select class="form-select form-select-sm" name="domain">
+                                            <option value="">All Domains</option>
+                                            {% for domain in all_domains %}
+                                                <option value="{{ domain }}" {{ 'selected' if domain == domain_filter else '' }}>
+                                                    {{ domain }}
+                                                </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                                            <i class="fas fa-search"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% include 'components/scenario_table.html' %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Scenario Tab -->
+            <div class="tab-pane fade {{ 'show active' if current_tab == 'create' else '' }}" 
+                 id="create" role="tabpanel">
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-plus me-2"></i>
+                                    Create New Scenario with AI-Powered Child Suggestions
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <h6 class="text-primary mb-3">
+                                            <i class="fas fa-info-circle me-2"></i>
+                                            Parent Scenario Details
+                                        </h6>
+                                <form method="POST" action="{{ url_for('create_scenario') }}" id="createScenarioForm">
+                                    <div class="mb-3">
+                                        <label for="description" class="form-label">Scenario Description *</label>
+                                        <textarea class="form-control" id="description" name="description" rows="4" required
+                                                  placeholder="Describe the clinical data quality scenario you want to create (minimum 70 characters)"
+                                                  oninput="handleDescriptionChange()"
+                                                  minlength="70"></textarea>
+                                        <div class="d-flex justify-content-between">
+                                            <small class="text-muted">Describe what data quality issue or validation rule you want to check</small>
+                                            <small id="charCount" class="text-muted">0/70 characters</small>
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label">Scenario Name</label>
+                                        <input type="text" class="form-control" id="name" name="name" readonly
+                                               placeholder="Will be auto-generated based on description">
+                                        <small class="text-muted">Auto-generated from your description</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="tag" class="form-label">Tag</label>
+                                        <select class="form-select" id="tag" name="tag" disabled>
+                                            <option value="">Will be auto-determined</option>
+                                            {% for tag in available_tags %}
+                                                <option value="{{ tag.name }}">{{ tag.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <small class="text-muted">Auto-determined based on scenario content</small>
+                                    </div>
+                                    
+                                    </div>
+                                    
+                                    <!-- AI Suggestions Section -->
+                                    <div class="col-md-8">
+                                        <div id="childSuggestions" style="display: none;">
+                                            <h6 class="text-success mb-3">
+                                                <i class="fas fa-magic me-2"></i>Child Suggestions
+                                            </h6>
+                                            <p class="text-muted mb-3">
+                                                Select the child scenarios that are most relevant to your parent scenario. These will be automatically included when you create the scenario.
+                                            </p>
+                                            
+                                            <div id="loadingSuggestions" class="text-center py-5" style="display: none;">
+                                                <div class="spinner-border text-primary me-3" role="status"></div>
+                                                <h6 class="text-muted">Generating child suggestions...</h6>
+                                                <small class="text-muted">This may take a few seconds</small>
+                                            </div>
+                                            
+                                            <div id="suggestionsContent" class="row g-3"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                    
+                                
+                                <input type="hidden" name="selected_children" id="selectedChildren">
+                                
+                                <!-- Action Buttons -->
+                                <div class="row mt-4">
+                                    <div class="col-md-4">
+                                        <div class="d-grid gap-2">
+                                            <button type="button" class="btn btn-outline-primary btn-lg" onclick="suggestChildScenarios()">
+                                                <i class="fas fa-magic me-2"></i>Get AI Suggestions
+                                            </button>
+                                            <button type="submit" class="btn btn-success btn-lg">
+                                                <i class="fas fa-plus me-2"></i>Create Scenario
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-8">
+                                        <div id="selectionSummary" class="alert alert-info d-none">
+                                            <h6><i class="fas fa-info-circle me-2"></i>Selection Summary</h6>
+                                            <p class="mb-0">You have selected <span id="selectedCount">0</span> child scenarios that will be included with your parent scenario.</p>
+                                            <button type="button" class="btn btn-sm btn-success mt-2" onclick="addSelectedToStudy()">
+                                                <i class="fas fa-plus me-1"></i>Add Selected to Study
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Study Scenarios Section -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card" id="studyScenariosCard" style="display: none;">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-flask me-2"></i>
+                                    Study Scenarios
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-3">These scenarios have been added to your study and can be edited or removed as needed.</p>
+                                <div id="studyScenariosContainer" class="row g-3">
+                                    <!-- Study scenarios will be dynamically added here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Manage Created Scenarios Section -->
+                <div class="row mt-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-edit me-2"></i>
+                                    Manage Created Scenarios
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Description</th>
+                                                <th>Tags</th>
+                                                <th>Children</th>
+                                                <th>Status</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for scenario in scenarios %}
+                                                {% if not scenario.is_ootb %}
+                                                <tr>
+                                                    <td>{{ scenario.name }}</td>
+                                                    <td>{{ scenario.description[:50] }}{{ '...' if scenario.description|length > 50 else '' }}</td>
+                                                    <td>
+                                                        {% if scenario.tag %}
+                                                            <span class="badge bg-{{ scenario.tag.color }} me-1">{{ scenario.tag.name }}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-info">{{ scenario.child_scenarios|length }}</span>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-{{ 'success' if scenario.is_active else 'secondary' }}">
+                                                            {{ 'Active' if scenario.is_active else 'Inactive' }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div class="btn-group btn-group-sm">
+                                                            <button class="btn btn-outline-primary" 
+                                                                    onclick="openChildScenarioModal('{{ scenario.id }}', '{{ scenario.name }}')"
+                                                                    title="Add Child Scenario Manually">
+                                                                <i class="fas fa-plus"></i>
+                                                            </button>
+                                                            <form method="POST" action="{{ url_for('generate_child_scenarios', parent_id=scenario.id) }}" style="display: inline;">
+                                                                <button type="submit" class="btn btn-outline-success" 
+                                                                        title="Generate Child Scenarios with AI"
+                                                                        onclick="return confirm('Generate child scenarios using AI for {{ scenario.name }}?')">
+                                                                    <i class="fas fa-magic"></i>
+                                                                </button>
+                                                            </form>
+                                                            <button class="btn btn-outline-danger" 
+                                                                    onclick="confirmDelete('{{ scenario.id }}', '{{ scenario.name }}')"
+                                                                    title="Delete Scenario">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                
+                                                <!-- Child scenarios -->
+                                                {% for child in scenario.child_scenarios %}
+                                                <tr class="table-light">
+                                                    <td class="ps-4">
+                                                        <i class="fas fa-arrow-right me-2"></i>
+                                                        Child Scenario
+                                                    </td>
+                                                    <td>{{ child.scenario_text[:50] }}{{ '...' if child.scenario_text|length > 50 else '' }}</td>
+                                                    <td>
+                                                        {% if child.tag %}
+                                                            <span class="badge bg-{{ child.tag.color }} me-1">{{ child.tag.name }}</span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td>
+                                                        <small>
+                                                            <strong>Domains:</strong> {{ child.domains|join(', ') }}<br>
+                                                            <strong>CDASH:</strong> {{ child.required_cdash_items|join(', ') }}
+                                                        </small>
+                                                    </td>
+                                                    <td>-</td>
+                                                    <td>
+                                                        <form method="POST" action="{{ url_for('delete_child_scenario', parent_id=scenario.id, child_id=child.id) }}" style="display: inline;">
+                                                            <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                                                    onclick="return confirm('Delete this child scenario?')">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Child Scenario Modal -->
+            {% include 'components/create_scenario_modal.html' %}
+
+            <!-- Recommend Scenario Tab -->
+            <div class="tab-pane fade {{ 'show active' if current_tab == 'recommend' else '' }}" 
+                 id="recommend" role="tabpanel">
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-filter me-2"></i>
+                                    Recommendation Criteria
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <form method="POST" action="{{ url_for('recommend_scenarios') }}">
+                                    <div class="mb-3">
+                                        <label class="form-label">Select Domains</label>
+                                        {% for domain in all_domains %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="recommend_domains" value="{{ domain }}" 
+                                                   id="domain_{{ loop.index }}"
+                                                   {{ 'checked' if domain in (selected_domains or []) else '' }}>
+                                            <label class="form-check-label" for="domain_{{ loop.index }}">
+                                                {{ domain }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Select Tags</label>
+                                        {% for tag in available_tags %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" 
+                                                   name="recommend_tags" value="{{ tag.name }}" 
+                                                   id="rec_tag_{{ loop.index }}"
+                                                   {{ 'checked' if tag.name in (selected_tags or []) else '' }}>
+                                            <label class="form-check-label" for="rec_tag_{{ loop.index }}">
+                                                <span class="badge bg-{{ tag.color }}">{{ tag.name }}</span>
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-magic me-2"></i>Get Recommendations
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-star me-2"></i>
+                                    Recommended Scenarios
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                {% if recommendations is defined %}
+                                    {% if recommendations %}
+                                        <div class="table-responsive">
+                                            <table class="table table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Scenario</th>
+                                                        <th>Match Score</th>
+                                                        <th>Reasons</th>
+                                                        <th>Children</th>
+                                                        <th>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for rec in recommendations %}
+                                                    <tr>
+                                                        <td>
+                                                            <strong>{{ rec.scenario.name }}</strong>
+                                                            <br>
+                                                            <small class="text-muted">{{ rec.scenario.description }}</small>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-success">{{ rec.score }}</span>
+                                                        </td>
+                                                        <td>
+                                                            <small>{{ rec.reasons|join('<br>')|safe }}</small>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge bg-info">{{ rec.scenario.child_scenarios|length }}</span>
+                                                        </td>
+                                                        <td>
+                                                            <form method="POST" action="{{ url_for('apply_scenario', scenario_id=rec.scenario.id) }}" style="display: inline;">
+                                                                <button type="submit" class="btn btn-success btn-sm">
+                                                                    <i class="fas fa-check me-1"></i>Apply
+                                                                </button>
+                                                            </form>
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    {% else %}
+                                        <div class="text-center py-4">
+                                            <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                                            <p class="text-muted">No scenarios match your criteria. Try adjusting your selection.</p>
+                                        </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="text-center py-4">
+                                        <i class="fas fa-lightbulb fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">Select domains and tags to get scenario recommendations.</p>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DRP Management Tab -->
+            <div class="tab-pane fade {{ 'show active' if current_tab == 'drp' else '' }}" 
+                 id="drp" role="tabpanel">
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="card-title mb-0">
+                                    <i class="fas fa-file-csv me-2"></i>
+                                    Data Review Plan (DRP) Management
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-muted mb-4">Upload your Data Review Plan CSV files to automatically generate scenarios, tag them, and create SDQ packages.</p>
+                                
+                                <!-- Upload Section -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="card border-primary">
+                                            <div class="card-header bg-light">
+                                                <h6 class="card-title mb-0">
+                                                    <i class="fas fa-upload me-2"></i>
+                                                    Upload DRP CSV File
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <form id="drp-upload-form" enctype="multipart/form-data">
+                                                    <div class="mb-3">
+                                                        <label for="drp-file" class="form-label">Select CSV File</label>
+                                                        <input type="file" class="form-control" id="drp-file" 
+                                                               accept=".csv" onchange="handleDRPFileUpload(event)">
+                                                        <div class="form-text">
+                                                            Expected columns: Check Name, Description, Domain, Priority, Type
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" class="btn btn-primary" onclick="processDRPFile()" disabled id="process-drp-btn">
+                                                        <i class="fas fa-cogs me-2"></i>Process DRP
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="card border-success">
+                                            <div class="card-header bg-light">
+                                                <h6 class="card-title mb-0">
+                                                    <i class="fas fa-info-circle me-2"></i>
+                                                    Expected CSV Format
+                                                </h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Column</th>
+                                                            <th>Example</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td>Check Name</td>
+                                                            <td>AE Severity Check</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Description</td>
+                                                            <td>AESEV = 'Severe' but CTCAE_GRADE missing</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Domain</td>
+                                                            <td>AE</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Priority</td>
+                                                            <td>High</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Type</td>
+                                                            <td>Safety</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Processing Status -->
+                                <div id="drp-status" class="mt-4" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-spinner fa-spin me-2"></i>
+                                        Processing DRP file and generating scenarios...
+                                    </div>
+                                </div>
+                                
+                                <!-- Processed Scenarios -->
+                                <div id="drp-scenarios-section" class="mt-4" style="display: none;">
+                                    <div class="card">
+                                        <div class="card-header d-flex justify-content-between align-items-center">
+                                            <h6 class="card-title mb-0">
+                                                <i class="fas fa-list me-2"></i>
+                                                Processed DRP Scenarios
+                                            </h6>
+                                            <div>
+                                                <button class="btn btn-success btn-sm me-2" onclick="generateSDQPackage()" id="generate-sdq-btn" disabled>
+                                                    <i class="fas fa-magic me-1"></i>Generate SDQ Package
+                                                </button>
+                                                <button class="btn btn-outline-primary btn-sm" onclick="downloadDRPWithCode()" id="download-drp-btn" disabled>
+                                                    <i class="fas fa-download me-1"></i>Download DRP with Code
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div id="drp-scenarios-container">
+                                                <!-- Scenarios will be populated here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- SDQ Package Generation -->
+                                <div id="sdq-package-section" class="mt-4" style="display: none;">
+                                    <div class="card border-success">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="card-title mb-0">
+                                                <i class="fas fa-package me-2"></i>
+                                                SDQ Package Ready
+                                            </h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <p class="mb-3">Your SDQ package has been generated with all scenarios, Python code, and domain mappings.</p>
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-success" onclick="downloadSDQPackage()" id="download-sdq-package-btn">
+                                                    <i class="fas fa-download me-1"></i>Download SDQ Package
+                                                </button>
+                                                <button class="btn btn-outline-info" onclick="previewSDQPackage()">
+                                                    <i class="fas fa-eye me-1"></i>Preview Package
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'components/create_scenario_modal.html' %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+function switchTab(tab) {
+    const url = new URL(window.location);
+    url.searchParams.set('tab', tab);
+    window.history.pushState({}, '', url);
+}
+
+function confirmDelete(scenarioId, scenarioName) {
+    if (confirm(`Are you sure you want to delete "${scenarioName}"?`)) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/delete_scenario/${scenarioId}`;
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function openChildScenarioModal(parentId, parentName) {
+    document.getElementById('childScenarioParentId').value = parentId;
+    document.getElementById('childScenarioModalTitle').textContent = `Add Child Scenario to "${parentName}"`;
+    new bootstrap.Modal(document.getElementById('childScenarioModal')).show();
+}
+</script>
+{% endblock %}
