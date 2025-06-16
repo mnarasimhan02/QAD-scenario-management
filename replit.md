@@ -138,6 +138,10 @@ Changelog:
 - June 15, 2025. Added comprehensive validation with specific column name matching for various CSV formats
 - June 15, 2025. Created comprehensive README.md with complete system documentation and usage instructions
 - June 15, 2025. Created detailed architecture.md with technical specifications, data flow diagrams, and deployment guidelines
+- June 16, 2025. Implemented incremental condition parsing for stable query text and Python code updates
+- June 16, 2025. Enhanced condition recognition for null/not null, comparison operators, and logical operators (AND/OR)
+- June 16, 2025. Added SDQ prompt templates to DRP Management with EDC deep links and API integration workflows
+- June 16, 2025. Created comprehensive SDQ templates including outbound processing, notification systems, and query management
 ```
 
 ## User Preferences

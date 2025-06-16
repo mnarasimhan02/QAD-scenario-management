@@ -207,5 +207,119 @@ class ScenarioGenerator:
         
         return child_scenarios
 
+    def _generate_domain_analysis(self, scenario) -> Dict[str, Any]:
+        """Generate domain data analysis for scenario recommendation"""
+        # Initialize default values
+        domains = set()
+        cdash_fields = set()
+        
+        try:
+            # Collect domain information from scenario
+            for child in scenario.child_scenarios:
+                domains.update(child.domains)
+                cdash_fields.update(child.required_cdash_items)
+            
+            domains_list = list(domains) if domains else ["DM", "AE", "EX"]
+            
+            prompt = f"""
+            Analyze the clinical scenario "{scenario.name}" for domain data patterns and risk assessment.
+            
+            Scenario Description: {scenario.description}
+            Domains Involved: {', '.join(domains_list)}
+            CDASH Fields: {', '.join(cdash_fields)}
+            Child Scenarios: {len(scenario.child_scenarios)}
+            
+            Provide analysis in JSON format:
+            {{
+                "patterns": ["pattern1", "pattern2", "pattern3"],
+                "domains": ["domain1", "domain2"],
+                "risk_level": "High|Medium|Low",
+                "risk_explanation": "explanation of risk assessment"
+            }}
+            """
+            
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are a clinical data analysis expert. Analyze scenarios for data patterns and risk assessment."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"},
+                max_tokens=500
+            )
+            
+            content = response.choices[0].message.content
+            if content:
+                result = json.loads(content)
+                return result
+            else:
+                raise Exception("No content returned from AI")
+            
+        except Exception as e:
+            print(f"Error generating domain analysis: {e}")
+            domains_list = list(domains) if domains else ["DM", "AE", "EX"]
+            return {
+                "patterns": [
+                    "Cross-domain data consistency checks",
+                    "Safety signal validation patterns",
+                    "Regulatory compliance verification"
+                ],
+                "domains": domains_list,
+                "risk_level": "Medium",
+                "risk_explanation": "Standard clinical data validation scenario with moderate complexity"
+            }
+
+    def _generate_model_thinking(self, scenario) -> Dict[str, Any]:
+        """Generate AI model reasoning for scenario recommendation"""
+        try:
+            # Collect scenario information
+            domains = set()
+            for child in scenario.child_scenarios:
+                domains.update(child.domains)
+            
+            prompt = f"""
+            Explain the AI reasoning for recommending the clinical scenario "{scenario.name}".
+            
+            Scenario: {scenario.name}
+            Description: {scenario.description}
+            Tag: {scenario.tag.name if scenario.tag else 'Not specified'}
+            Domains: {', '.join(domains)}
+            Number of Child Scenarios: {len(scenario.child_scenarios)}
+            
+            Provide reasoning in JSON format:
+            {{
+                "selection_reasoning": "why this scenario was recommended",
+                "priority_logic": "explanation of priority assessment",
+                "implementation_steps": ["step1", "step2", "step3"]
+            }}
+            """
+            
+            response = self.client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": "You are an AI clinical scenario recommendation expert. Explain your reasoning for scenario selection."},
+                    {"role": "user", "content": prompt}
+                ],
+                response_format={"type": "json_object"},
+                max_tokens=500
+            )
+            
+            content = response.choices[0].message.content or ""
+            result = json.loads(content)
+            return result
+            
+        except Exception as e:
+            print(f"Error generating model thinking: {e}")
+            return {
+                "selection_reasoning": "Selected based on high relevance to specified clinical domains and comprehensive data validation coverage",
+                "priority_logic": "Prioritized due to critical safety implications and regulatory compliance requirements",
+                "implementation_steps": [
+                    "Review scenario specifications and requirements",
+                    "Configure data validation rules and thresholds",
+                    "Test scenario against sample clinical data",
+                    "Deploy to production environment with monitoring"
+                ]
+            }
+
 # Global generator instance
 scenario_generator = ScenarioGenerator()

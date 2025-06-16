@@ -2,7 +2,7 @@ from flask import render_template, request, redirect, url_for, flash, jsonify, m
 from app import app
 from data import storage
 from models import ParentScenario, ChildScenario, Tag
-from ai_generator import scenario_generator
+from ai_generator import scenario_generator, ScenarioGenerator
 import uuid
 import json
 import csv
@@ -668,3 +668,49 @@ def suggest_child_scenarios_api():
             'success': False,
             'error': f'Failed to generate suggestions: {str(e)}'
         })
+
+@app.route('/api/generate-domain-analysis', methods=['POST'])
+def generate_domain_analysis():
+    """API endpoint to generate domain analysis for recommendation"""
+    try:
+        data = request.get_json()
+        scenario_id = data.get('scenario_id', '')
+        
+        if not scenario_id:
+            return jsonify({'error': 'Scenario ID is required'}), 400
+        
+        # Get scenario from storage
+        scenario = storage.get_scenario_by_id(scenario_id)
+        if not scenario:
+            return jsonify({'error': 'Scenario not found'}), 404
+        
+        # Generate domain analysis using AI
+        generator = ScenarioGenerator()
+        analysis = generator._generate_domain_analysis(scenario)
+        
+        return jsonify(analysis)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/generate-model-thinking', methods=['POST'])
+def generate_model_thinking():
+    """API endpoint to generate model reasoning for recommendation"""
+    try:
+        data = request.get_json()
+        scenario_id = data.get('scenario_id', '')
+        
+        if not scenario_id:
+            return jsonify({'error': 'Scenario ID is required'}), 400
+        
+        # Get scenario from storage
+        scenario = storage.get_scenario_by_id(scenario_id)
+        if not scenario:
+            return jsonify({'error': 'Scenario not found'}), 404
+        
+        # Generate model thinking using AI
+        generator = ScenarioGenerator()
+        thinking = generator._generate_model_thinking(scenario)
+        
+        return jsonify(thinking)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
