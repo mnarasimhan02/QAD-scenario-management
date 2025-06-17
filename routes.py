@@ -17,7 +17,7 @@ def index():
     tag_filter = request.args.get('tag', '')
     domain_filter = request.args.get('domain', '')
     active_only = request.args.get('active_only', 'false').lower() == 'true'
-    tab = request.args.get('tab', 'ootb')
+    tab = request.args.get('tab', 'drp')
     
     # Get scenarios based on filters
     scenarios = storage.search_scenarios(
@@ -346,16 +346,24 @@ def dry_run_scenario(scenario_id):
 
 @app.route('/recommend_scenarios', methods=['POST'])
 def recommend_scenarios():
-    """Get scenario recommendations based on selected domains and tags"""
+    """Get scenario recommendations based on study data patterns and characteristics"""
     try:
+        # Extract study characteristics
+        study_type = request.form.get('study_type', '')
+        therapeutic_area = request.form.get('therapeutic_area', '')
         selected_domains = request.form.getlist('recommend_domains')
         selected_tags = request.form.getlist('recommend_tags')
+        
+        # Extract data quality focus areas
+        critical_endpoints = request.form.get('critical_endpoints') == 'on'
+        regulatory_compliance = request.form.get('regulatory_compliance') == 'on'
+        safety_monitoring = request.form.get('safety_monitoring') == 'on'
         
         if not selected_domains and not selected_tags:
             flash('Please select at least one domain or tag for recommendations.', 'warning')
             return redirect(url_for('index', tab='recommend'))
         
-        # Find matching scenarios
+        # Find matching scenarios with enhanced scoring
         recommendations = []
         
         for scenario in storage.get_all_scenarios():
@@ -365,15 +373,15 @@ def recommend_scenarios():
             score = 0
             reasons = []
             
-            # Check domain matches
+            # Check domain matches (higher weight)
             scenario_domains = set()
             for child in scenario.child_scenarios:
                 scenario_domains.update(child.domains)
             
             domain_matches = scenario_domains.intersection(set(selected_domains))
             if domain_matches:
-                score += len(domain_matches) * 2
-                reasons.append(f"Matches domains: {', '.join(domain_matches)}")
+                score += len(domain_matches) * 25
+                reasons.append(f"Primary domain alignment: {', '.join(domain_matches)}")
             
             # Check tag matches
             scenario_tag_names = set()
@@ -385,13 +393,57 @@ def recommend_scenarios():
             
             tag_matches = scenario_tag_names.intersection(set(selected_tags))
             if tag_matches:
-                score += len(tag_matches)
-                reasons.append(f"Matches tags: {', '.join(tag_matches)}")
+                score += len(tag_matches) * 15
+                reasons.append(f"Risk category match: {', '.join(tag_matches)}")
             
+            # Study type specific scoring
+            if study_type:
+                if study_type in ['phase1', 'phase2'] and 'Safety' in scenario_tag_names:
+                    score += 20
+                    reasons.append("Critical for early-phase safety monitoring")
+                elif study_type == 'phase3' and 'Efficacy' in scenario_tag_names:
+                    score += 20
+                    reasons.append("Essential for confirmatory efficacy studies")
+                elif study_type == 'observational' and 'Data Quality' in scenario_tag_names:
+                    score += 15
+                    reasons.append("Important for observational data integrity")
+            
+            # Therapeutic area specific scoring
+            if therapeutic_area:
+                if therapeutic_area == 'oncology' and ('AE' in scenario_domains or 'Safety' in scenario_tag_names):
+                    score += 15
+                    reasons.append("Critical for oncology safety monitoring")
+                elif therapeutic_area == 'cardiology' and ('VS' in scenario_domains or 'EG' in scenario_domains):
+                    score += 15
+                    reasons.append("Essential for cardiovascular assessments")
+                elif therapeutic_area == 'neurology' and ('AE' in scenario_domains or 'MH' in scenario_domains):
+                    score += 15
+                    reasons.append("Important for neurological safety tracking")
+            
+            # Data quality focus bonuses
+            if critical_endpoints and 'Efficacy' in scenario_tag_names:
+                score += 10
+                reasons.append("Supports critical endpoint validation")
+            
+            if regulatory_compliance and 'Compliance' in scenario_tag_names:
+                score += 10
+                reasons.append("Enhances regulatory compliance")
+            
+            if safety_monitoring and ('Safety' in scenario_tag_names or 'AE' in scenario_domains):
+                score += 10
+                reasons.append("Strengthens safety monitoring")
+            
+            # Bonus for comprehensive scenarios (multiple child scenarios)
+            if len(scenario.child_scenarios) >= 3:
+                score += 5
+                reasons.append("Comprehensive validation coverage")
+            
+            # Convert to percentage and add relevance boost
             if score > 0:
+                final_score = min(100, score)
                 recommendations.append({
                     'scenario': scenario,
-                    'score': score,
+                    'score': final_score,
                     'reasons': reasons
                 })
         
@@ -712,5 +764,91 @@ def generate_model_thinking():
         thinking = generator._generate_model_thinking(scenario)
         
         return jsonify(thinking)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/suggest-ootb-scenarios', methods=['POST'])
+def suggest_ootb_scenarios():
+    """API endpoint to suggest OOTB scenarios based on DRP domains"""
+    try:
+        data = request.get_json()
+        domains = data.get('domains', [])
+        exclude_existing = data.get('exclude_existing', True)
+        
+        # Get all OOTB scenarios from storage
+        all_scenarios = storage.get_all_scenarios()
+        ootb_scenarios = [s for s in all_scenarios if s.is_ootb]
+        
+        # Filter by domains if specified
+        if domains:
+            relevant_scenarios = []
+            for scenario in ootb_scenarios:
+                scenario_domains = set()
+                for child in scenario.child_scenarios:
+                    scenario_domains.update(child.domains)
+                
+                # Check if scenario covers any of the requested domains
+                if any(domain in scenario_domains for domain in domains):
+                    relevant_scenarios.append(scenario)
+        else:
+            relevant_scenarios = ootb_scenarios
+        
+        # Convert to suggestion format
+        suggestions = []
+        for scenario in relevant_scenarios[:6]:  # Limit to 6 suggestions
+            suggestion = {
+                'id': scenario.id,
+                'name': scenario.name,
+                'description': scenario.description,
+                'domain': list(set([d for child in scenario.child_scenarios for d in child.domains]))[0] if scenario.child_scenarios else 'General',
+                'childCount': len(scenario.child_scenarios),
+                'priority': 'High' if len(scenario.child_scenarios) > 5 else 'Medium'
+            }
+            suggestions.append(suggestion)
+        
+        return jsonify({'suggestions': suggestions})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/get-ootb-scenarios', methods=['POST'])
+def get_ootb_scenarios():
+    """API endpoint to retrieve specific OOTB scenarios by IDs"""
+    try:
+        data = request.get_json()
+        scenario_ids = data.get('scenario_ids', [])
+        
+        if not scenario_ids:
+            return jsonify({'error': 'Scenario IDs are required'}), 400
+        
+        # Get scenarios from storage
+        scenarios = []
+        for scenario_id in scenario_ids:
+            scenario = storage.get_scenario_by_id(scenario_id)
+            if scenario and scenario.is_ootb:
+                # Convert to parent-child format
+                scenario_data = {
+                    'id': scenario.id,
+                    'name': scenario.name,
+                    'description': scenario.description,
+                    'domain': list(set([d for child in scenario.child_scenarios for d in child.domains]))[0] if scenario.child_scenarios else 'General',
+                    'tag': scenario.tag.name if scenario.tag else 'Other',
+                    'childScenarios': [
+                        {
+                            'id': child.id,
+                            'name': child.scenario_text[:50] + '...' if len(child.scenario_text) > 50 else child.scenario_text,
+                            'description': child.reasoning_template,
+                            'priority': 'High' if 'serious' in child.scenario_text.lower() or 'critical' in child.scenario_text.lower() else 'Medium',
+                            'cdashItems': child.required_cdash_items,
+                            'domains': child.domains,
+                            'queryText': child.reasoning_template,
+                            'pythonCode': child.pseudo_code
+                        }
+                        for child in scenario.child_scenarios
+                    ],
+                    'isFromDRP': False
+                }
+                scenarios.append(scenario_data)
+        
+        return jsonify({'scenarios': scenarios})
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -48,6 +48,164 @@
 
 .suggestion-card.selected {
     border-color: #198754 !important;
+}
+
+/* Workflow step styling */
+.workflow-step {
+    position: relative;
+    padding: 10px 0;
+}
+
+.step-number {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin: 0 auto 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.workflow-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 30px;
+    right: -50%;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(to right, #6c757d, #dee2e6);
+    z-index: 1;
+}
+
+.workflow-step.completed .step-number {
+    background-color: #198754 !important;
+    transform: scale(1.1);
+}
+
+.workflow-step.active .step-number {
+    background-color: #0d6efd !important;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 2px 8px rgba(13, 110, 253, 0.4); }
+    50% { box-shadow: 0 4px 16px rgba(13, 110, 253, 0.6); }
+    100% { box-shadow: 0 2px 8px rgba(13, 110, 253, 0.4); }
+}
+
+/* Section progress indicators */
+.section-indicator {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 15px;
+}
+
+.section-indicator::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: #6c757d;
+    transition: all 0.3s ease;
+}
+
+.section-indicator.completed::before {
+    background-color: #198754;
+    box-shadow: 0 0 8px rgba(25, 135, 84, 0.5);
+}
+
+.section-indicator.active::before {
+    background-color: #0d6efd;
+    animation: pulse 2s infinite;
+}
+
+/* Enhanced card styling for workflow sections */
+.workflow-section {
+    border-left: 4px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.workflow-section.active {
+    border-left-color: #0d6efd;
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.1);
+}
+
+.workflow-section.completed {
+    border-left-color: #198754;
+    background-color: #f8fff9;
+}
+
+/* Progress bar for workflow */
+.workflow-progress {
+    height: 6px;
+    background-color: #e9ecef;
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 20px 0;
+}
+
+.workflow-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #0d6efd, #198754);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+    width: 0%;
+}
+
+/* Accordion enhancements for parent-child scenarios */
+.accordion-button {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.accordion-button:not(.collapsed) {
+    background-color: #e7f3ff;
+    border-color: #0d6efd;
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.1);
+}
+
+.accordion-item {
+    border: 1px solid #dee2e6;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* OOTB suggestion cards */
+.ootb-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.ootb-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ootb-card.selected {
+    border-color: #17a2b8 !important;
+    background-color: #e1f5fe;
+}
+
+/* Integrated review statistics cards */
+.stats-card {
+    transition: all 0.3s ease;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.stats-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
     background-color: #f8fff9 !important;
 }
 

@@ -6,6 +6,14 @@
         <!-- Tab Navigation -->
         <ul class="nav nav-tabs" id="scenarioTabs" role="tablist">
             <li class="nav-item" role="presentation">
+                <button class="nav-link {{ 'active' if current_tab == 'drp' else '' }}" 
+                        id="drp-tab" data-bs-toggle="tab" data-bs-target="#drp" 
+                        type="button" role="tab" onclick="switchTab('drp')">
+                    <i class="fas fa-file-csv me-2"></i>
+                    DRP Management
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
                 <button class="nav-link {{ 'active' if current_tab == 'ootb' else '' }}" 
                         id="ootb-tab" data-bs-toggle="tab" data-bs-target="#ootb" 
                         type="button" role="tab" onclick="switchTab('ootb')">
@@ -27,14 +35,6 @@
                         type="button" role="tab" onclick="switchTab('recommend')">
                     <i class="fas fa-lightbulb me-2"></i>
                     Recommend Scenario
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
-                <button class="nav-link {{ 'active' if current_tab == 'drp' else '' }}" 
-                        id="drp-tab" data-bs-toggle="tab" data-bs-target="#drp" 
-                        type="button" role="tab" onclick="switchTab('drp')">
-                    <i class="fas fa-file-csv me-2"></i>
-                    DRP Management
                 </button>
             </li>
         </ul>
@@ -336,42 +336,110 @@
                         <div class="card">
                             <div class="card-header">
                                 <h5 class="card-title mb-0">
-                                    <i class="fas fa-filter me-2"></i>
-                                    Recommendation Criteria
+                                    <i class="fas fa-brain me-2"></i>
+                                    Study Data Pattern Analysis
                                 </h5>
                             </div>
                             <div class="card-body">
-                                <form method="POST" action="{{ url_for('recommend_scenarios') }}">
+                                <div class="alert alert-info border-0 mb-4">
+                                    <h6 class="alert-heading">
+                                        <i class="fas fa-chart-line me-2"></i>Smart Recommendations
+                                    </h6>
+                                    <p class="mb-0 small">Get AI-powered scenario recommendations based on clinical data patterns, regulatory requirements, and study characteristics.</p>
+                                </div>
+                                
+                                <form method="POST" action="{{ url_for('recommend_scenarios') }}" id="recommendation-form">
                                     <div class="mb-3">
-                                        <label class="form-label">Select Domains</label>
-                                        {% for domain in all_domains %}
+                                        <label class="form-label fw-bold">Study Type</label>
+                                        <select class="form-select" name="study_type" id="study-type">
+                                            <option value="">Select Study Type</option>
+                                            <option value="phase1">Phase I (Safety)</option>
+                                            <option value="phase2">Phase II (Efficacy)</option>
+                                            <option value="phase3">Phase III (Confirmatory)</option>
+                                            <option value="phase4">Phase IV (Post-Market)</option>
+                                            <option value="observational">Observational</option>
+                                            <option value="registry">Registry Study</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Therapeutic Area</label>
+                                        <select class="form-select" name="therapeutic_area" id="therapeutic-area">
+                                            <option value="">Select Therapeutic Area</option>
+                                            <option value="oncology">Oncology</option>
+                                            <option value="cardiology">Cardiology</option>
+                                            <option value="neurology">Neurology</option>
+                                            <option value="respiratory">Respiratory</option>
+                                            <option value="endocrinology">Endocrinology</option>
+                                            <option value="immunology">Immunology</option>
+                                            <option value="infectious_disease">Infectious Disease</option>
+                                            <option value="psychiatry">Psychiatry</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Primary Clinical Domains</label>
+                                        <div class="row">
+                                            {% for domain in all_domains %}
+                                            <div class="col-sm-6 mb-2">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           name="recommend_domains" value="{{ domain }}" 
+                                                           id="domain_{{ loop.index }}"
+                                                           {{ 'checked' if domain in (selected_domains or []) else '' }}>
+                                                    <label class="form-check-label" for="domain_{{ loop.index }}">
+                                                        {{ domain }}
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Risk Categories</label>
+                                        <div class="row">
+                                            {% for tag in available_tags %}
+                                            <div class="col-sm-6 mb-2">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           name="recommend_tags" value="{{ tag.name }}" 
+                                                           id="rec_tag_{{ loop.index }}"
+                                                           {{ 'checked' if tag.name in (selected_tags or []) else '' }}>
+                                                    <label class="form-check-label" for="rec_tag_{{ loop.index }}">
+                                                        <span class="badge bg-light text-dark border">{{ tag.name }}</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="form-label fw-bold">Data Quality Focus</label>
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   name="recommend_domains" value="{{ domain }}" 
-                                                   id="domain_{{ loop.index }}"
-                                                   {{ 'checked' if domain in (selected_domains or []) else '' }}>
-                                            <label class="form-check-label" for="domain_{{ loop.index }}">
-                                                {{ domain }}
+                                            <input class="form-check-input" type="checkbox" name="critical_endpoints" id="critical-endpoints">
+                                            <label class="form-check-label" for="critical-endpoints">
+                                                Critical Endpoint Validation
                                             </label>
                                         </div>
-                                        {% endfor %}
-                                    </div>
-                                    <div class="mb-3">
-                                        <label class="form-label">Select Tags</label>
-                                        {% for tag in available_tags %}
                                         <div class="form-check">
-                                            <input class="form-check-input" type="checkbox" 
-                                                   name="recommend_tags" value="{{ tag.name }}" 
-                                                   id="rec_tag_{{ loop.index }}"
-                                                   {{ 'checked' if tag.name in (selected_tags or []) else '' }}>
-                                            <label class="form-check-label" for="rec_tag_{{ loop.index }}">
-                                                <span class="badge bg-{{ tag.color }}">{{ tag.name }}</span>
+                                            <input class="form-check-input" type="checkbox" name="regulatory_compliance" id="regulatory-compliance">
+                                            <label class="form-check-label" for="regulatory-compliance">
+                                                Regulatory Compliance Focus
                                             </label>
                                         </div>
-                                        {% endfor %}
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" name="safety_monitoring" id="safety-monitoring">
+                                            <label class="form-check-label" for="safety-monitoring">
+                                                Enhanced Safety Monitoring
+                                            </label>
+                                        </div>
                                     </div>
-                                    <button type="submit" class="btn btn-primary">
-                                        <i class="fas fa-magic me-2"></i>Get Recommendations
+                                    
+                                    <button type="submit" class="btn btn-primary w-100">
+                                        <i class="fas fa-magic me-2"></i>Generate Smart Recommendations
                                     </button>
                                 </form>
                             </div>
@@ -536,7 +604,44 @@
                                 </h5>
                             </div>
                             <div class="card-body">
-                                <p class="text-muted mb-4">Upload your Data Review Plan CSV files to automatically generate scenarios, tag them, and create SDQ packages.</p>
+                                <div class="alert alert-info border-0 mb-4">
+                                    <h6 class="alert-heading mb-2">
+                                        <i class="fas fa-route me-2"></i>Enhanced DRP Integration Workflow
+                                    </h6>
+                                    <p class="mb-2">Follow this streamlined process for comprehensive data review:</p>
+                                    <div class="row text-center">
+                                        <div class="col-md-2">
+                                            <div class="workflow-step">
+                                                <div class="step-number bg-primary text-white">1</div>
+                                                <small class="text-muted">Upload DRP</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="workflow-step">
+                                                <div class="step-number bg-secondary text-white">2</div>
+                                                <small class="text-muted">Create Scenarios</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="workflow-step">
+                                                <div class="step-number bg-info text-white">3</div>
+                                                <small class="text-muted">Add OOTB</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="workflow-step">
+                                                <div class="step-number bg-success text-white">4</div>
+                                                <small class="text-muted">Integrated Review</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="workflow-step">
+                                                <div class="step-number bg-warning text-white">5</div>
+                                                <small class="text-muted">Execute & Export</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                                 
                                 <!-- Upload Section -->
                                 <div class="row">
@@ -618,15 +723,27 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Workflow Progress Bar -->
+                                <div id="workflow-progress-section" class="mt-4" style="display: none;">
+                                    <div class="workflow-progress">
+                                        <div class="workflow-progress-bar" id="workflow-progress-bar"></div>
+                                    </div>
+                                </div>
+
                                 <!-- Processed Scenarios -->
-                                <div id="drp-scenarios-section" class="mt-4" style="display: none;">
+                                <div id="drp-scenarios-section" class="mt-4 workflow-section" style="display: none;">
                                     <div class="card">
                                         <div class="card-header d-flex justify-content-between align-items-center">
-                                            <h6 class="card-title mb-0">
-                                                <i class="fas fa-list me-2"></i>
-                                                Processed DRP Scenarios
-                                            </h6>
+                                            <div class="section-indicator" id="step1-indicator">
+                                                <h6 class="card-title mb-0">
+                                                    <i class="fas fa-list me-2"></i>
+                                                    Step 1: Processed DRP Scenarios
+                                                </h6>
+                                            </div>
                                             <div>
+                                                <button class="btn btn-info btn-sm me-2" onclick="createParentChildScenariosEnhanced()" id="create-scenarios-btn" disabled>
+                                                    <i class="fas fa-sitemap me-1"></i>Create Parent→Child Scenarios
+                                                </button>
                                                 <button class="btn btn-success btn-sm me-2" onclick="generateSDQPackage()" id="generate-sdq-btn" disabled>
                                                     <i class="fas fa-magic me-1"></i>Generate SDQ Package
                                                 </button>
@@ -636,8 +753,120 @@
                                             </div>
                                         </div>
                                         <div class="card-body">
+                                            <div class="alert alert-light border-0 mb-3">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-info-circle me-1"></i>
+                                                    Your DRP scenarios have been processed and are ready for organization into parent-child structures.
+                                                </small>
+                                            </div>
                                             <div id="drp-scenarios-container">
                                                 <!-- Scenarios will be populated here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Parent-Child Scenario Creation -->
+                                <div id="scenario-creation-section" class="mt-4 workflow-section" style="display: none;">
+                                    <div class="card border-success">
+                                        <div class="card-header bg-success text-white">
+                                            <div class="section-indicator completed" id="step2-indicator">
+                                                <h6 class="card-title mb-0 text-white">
+                                                    <i class="fas fa-sitemap me-2"></i>
+                                                    Step 2: Parent→Child Scenario Management
+                                                </h6>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row mb-3">
+                                                <div class="col-md-8">
+                                                    <div class="alert alert-success border-0 mb-3">
+                                                        <small class="text-success">
+                                                            <i class="fas fa-check-circle me-1"></i>
+                                                            DRP scenarios organized into domain-based parent scenarios with detailed child validation rules.
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4 text-end">
+                                                    <button class="btn btn-outline-info btn-sm me-2" onclick="suggestOOTBScenariosEnhanced()">
+                                                        <i class="fas fa-plus-circle me-1"></i>Add OOTB Scenarios
+                                                    </button>
+                                                    <button class="btn btn-success btn-sm" onclick="bulkAddToIntegratedReviewEnhanced()" id="bulk-add-btn" disabled>
+                                                        <i class="fas fa-layer-group me-1"></i>Add All to Review
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Parent Scenarios List -->
+                                            <div id="parent-scenarios-container">
+                                                <!-- Parent scenarios will be populated here -->
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- OOTB Suggestions -->
+                                <div id="ootb-suggestions-section" class="mt-4 workflow-section" style="display: none;">
+                                    <div class="card border-info">
+                                        <div class="card-header bg-info text-white">
+                                            <div class="section-indicator active" id="step3-indicator">
+                                                <h6 class="card-title mb-0 text-white">
+                                                    <i class="fas fa-lightbulb me-2"></i>
+                                                    Step 3: OOTB Scenario Enhancement
+                                                </h6>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="alert alert-info border-0 mb-3">
+                                                <small class="text-info">
+                                                    <i class="fas fa-magic me-1"></i>
+                                                    Smart recommendations based on your DRP domains. Select scenarios to enhance validation coverage.
+                                                </small>
+                                            </div>
+                                            <div id="ootb-suggestions-container">
+                                                <!-- OOTB suggestions will be populated here -->
+                                            </div>
+                                            <div class="text-center mt-3">
+                                                <button class="btn btn-info" onclick="addSelectedOOTBScenarios()" id="add-ootb-btn" disabled>
+                                                    <i class="fas fa-check me-1"></i>Add Selected OOTB Scenarios
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Integrated Data Review -->
+                                <div id="integrated-review-section" class="mt-4 workflow-section" style="display: none;">
+                                    <div class="card border-primary">
+                                        <div class="card-header bg-primary text-white">
+                                            <div class="section-indicator completed" id="step4-indicator">
+                                                <h6 class="card-title mb-0 text-white">
+                                                    <i class="fas fa-clipboard-check me-2"></i>
+                                                    Step 4: Integrated Data Review Assistant
+                                                </h6>
+                                            </div>
+                                        </div>
+                                        <div class="card-body">
+                                            <div class="row mb-3">
+                                                <div class="col-md-8">
+                                                    <div class="alert alert-primary border-0 mb-3">
+                                                        <small class="text-primary">
+                                                            <i class="fas fa-rocket me-1"></i>
+                                                            Complete scenario collection ready for comprehensive data review and validation.
+                                                        </small>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4 text-end">
+                                                    <button class="btn btn-primary btn-sm me-2" onclick="executeIntegratedReviewEnhanced()">
+                                                        <i class="fas fa-play me-1"></i>Execute Review
+                                                    </button>
+                                                    <button class="btn btn-outline-primary btn-sm" onclick="exportIntegratedReview()">
+                                                        <i class="fas fa-download me-1"></i>Export Package
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div id="integrated-review-container">
+                                                <!-- Integrated review scenarios will be populated here -->
                                             </div>
                                         </div>
                                     </div>

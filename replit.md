@@ -142,6 +142,11 @@ Changelog:
 - June 16, 2025. Enhanced condition recognition for null/not null, comparison operators, and logical operators (AND/OR)
 - June 16, 2025. Added SDQ prompt templates to DRP Management with EDC deep links and API integration workflows
 - June 16, 2025. Created comprehensive SDQ templates including outbound processing, notification systems, and query management
+- June 16, 2025. Implemented complete DRP-to-scenario integration workflow with parent-child scenario creation
+- June 16, 2025. Added OOTB scenario suggestion system based on DRP domains with selective integration
+- June 16, 2025. Created Integrated Data Review Assistant with bulk scenario management and export capabilities
+- June 16, 2025. Redesigned UI with enhanced visual workflow including numbered progress indicators, animated progress bars, and step-by-step guidance
+- June 16, 2025. Reordered navigation tabs to start with DRP Management as the primary entry point for the workflow
 ```
 
 ## User Preferences

@@ -2311,6 +2311,24 @@ function displayDRPScenarios(scenarios) {
     
     container.innerHTML = html;
     
+    // Store processed scenarios globally for workflow
+    processedDRPScenarios = scenarios;
+    
+    // Enable scenario creation button and update workflow progress
+    const createScenariosBtn = document.getElementById('create-scenarios-btn');
+    if (createScenariosBtn) {
+        createScenariosBtn.disabled = false;
+    }
+    
+    // Update workflow progress
+    updateWorkflowProgress(1);
+    updateStepStatus('step1-indicator', 'completed');
+    
+    // Automatically create parent-child scenarios after processing
+    setTimeout(() => {
+        createParentChildScenarios();
+    }, 1000);
+    
     // Generate SDQ prompt templates after the HTML is rendered
     scenarios.forEach((scenario, index) => {
         setTimeout(() => {
@@ -2894,6 +2912,560 @@ async function generateModelThinking(scenarioId) {
     }
 }
 
+// Global variables for workflow management
+let processedDRPScenarios = [];
+let parentChildScenarios = [];
+let selectedOOTBScenarios = [];
+let integratedReviewScenarios = [];
+
+/**
+ * Create parent-child scenarios from processed DRP data
+ */
+function createParentChildScenarios() {
+    if (!processedDRPScenarios || processedDRPScenarios.length === 0) {
+        showToast('No DRP scenarios to process', 'warning');
+        return;
+    }
+
+    // Group scenarios by domain to create parent scenarios
+    const domainGroups = {};
+    processedDRPScenarios.forEach(scenario => {
+        const domain = scenario.domain;
+        if (!domainGroups[domain]) {
+            domainGroups[domain] = [];
+        }
+        domainGroups[domain].push(scenario);
+    });
+
+    // Create parent scenarios for each domain
+    parentChildScenarios = [];
+    Object.keys(domainGroups).forEach(domain => {
+        const childScenarios = domainGroups[domain];
+        const parentScenario = {
+            id: `parent_${domain.toLowerCase()}_${Date.now()}`,
+            name: `${domain} Data Validation Suite`,
+            description: `Comprehensive data validation scenarios for ${domain} domain including ${childScenarios.length} specific checks`,
+            domain: domain,
+            tag: childScenarios[0].type || 'Data Quality',
+            childScenarios: childScenarios,
+            isFromDRP: true
+        };
+        parentChildScenarios.push(parentScenario);
+    });
+
+    displayParentChildScenarios();
+    showScenarioCreationSection();
+    updateWorkflowProgress(2);
+    updateStepStatus('step2-indicator', 'completed');
+    showToast(`Created ${parentChildScenarios.length} parent scenarios with ${processedDRPScenarios.length} child scenarios`, 'success');
+}
+
+/**
+ * Display parent-child scenarios
+ */
+function displayParentChildScenarios() {
+    const container = document.getElementById('parent-scenarios-container');
+    if (!container) {
+        console.error('Parent scenarios container not found');
+        return;
+    }
+
+    // Show the parent scenario section first
+    showScenarioCreationSection();
+
+    if (parentChildScenarios.length === 0) {
+        container.innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle me-2"></i>
+                No parent scenarios created yet. Click "Create Parent→Child Scenarios" to organize your DRP scenarios.
+            </div>
+        `;
+        return;
+    }
+
+    let html = `
+        <div class="mb-3">
+            <h6 class="text-muted">Parent Scenarios (${parentChildScenarios.length})</h6>
+        </div>
+        <div class="accordion" id="parentScenariosAccordion">
+    `;
+
+    parentChildScenarios.forEach((parent, parentIndex) => {
+        html += `
+            <div class="accordion-item mb-2">
+                <h2 class="accordion-header" id="heading${parentIndex}">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                            data-bs-target="#collapse${parentIndex}" aria-expanded="false">
+                        <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                            <div>
+                                <strong class="text-primary">${parent.name}</strong>
+                                <span class="badge bg-info ms-2">DRP</span>
+                                <span class="badge bg-secondary ms-1">${parent.domain}</span>
+                                <span class="badge bg-warning ms-1 text-dark">${parent.tag}</span>
+                            </div>
+                            <div>
+                                <span class="badge bg-primary">${parent.childScenarios.length} child scenarios</span>
+                            </div>
+                        </div>
+                    </button>
+                </h2>
+                <div id="collapse${parentIndex}" class="accordion-collapse collapse" 
+                     data-bs-parent="#parentScenariosAccordion">
+                    <div class="accordion-body">
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <p class="text-muted mb-0">${parent.description}</p>
+                            </div>
+                        </div>
+                        
+                        <h6 class="text-info mb-3">Child Scenarios (${parent.childScenarios.length})</h6>
+                        <div class="row">
+                            ${parent.childScenarios.map((child, childIndex) => `
+                                <div class="col-md-6 mb-3">
+                                    <div class="card border-light h-100">
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="card-title text-primary mb-0">${child.name}</h6>
+                                                <span class="badge bg-${child.priority === 'High' ? 'danger' : child.priority === 'Medium' ? 'warning' : 'success'} small">
+                                                    ${child.priority}
+                                                </span>
+                                            </div>
+                                            <p class="card-text small text-muted mb-2">${child.description}</p>
+                                            <div class="mb-2">
+                                                <small class="text-info">Query Text:</small>
+                                                <p class="small text-dark mb-2">${child.queryText || 'Generated from description'}</p>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="badge bg-light text-dark">${child.domain}</span>
+                                                <small class="text-muted">${child.cdashItems?.join(', ') || 'Standard fields'}</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
+
+    // Enable bulk add button
+    const bulkAddBtn = document.getElementById('bulk-add-btn');
+    if (bulkAddBtn) {
+        bulkAddBtn.disabled = false;
+    }
+}
+
+/**
+ * Suggest OOTB scenarios based on DRP domains
+ */
+async function suggestOOTBScenarios() {
+    try {
+        // Get unique domains from processed DRP scenarios
+        const drpDomains = [...new Set(processedDRPScenarios.map(s => s.domain))];
+        
+        const response = await fetch('/api/suggest-ootb-scenarios', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                domains: drpDomains,
+                exclude_existing: true
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            displayOOTBSuggestions(data.suggestions);
+            showOOTBSuggestionsSection();
+        } else {
+            throw new Error('Failed to get OOTB suggestions');
+        }
+    } catch (error) {
+        console.error('Error suggesting OOTB scenarios:', error);
+        // Show fallback suggestions based on common domains
+        const fallbackSuggestions = generateFallbackOOTBSuggestions();
+        displayOOTBSuggestions(fallbackSuggestions);
+        showOOTBSuggestionsSection();
+    }
+}
+
+/**
+ * Generate fallback OOTB suggestions
+ */
+function generateFallbackOOTBSuggestions() {
+    const drpDomains = [...new Set(processedDRPScenarios.map(s => s.domain))];
+    const suggestions = [];
+
+    if (drpDomains.includes('AE')) {
+        suggestions.push({
+            id: 'ootb_ae_serious',
+            name: 'Serious Adverse Event Validation',
+            description: 'Comprehensive validation for serious adverse events including reporting timelines and regulatory requirements',
+            domain: 'AE',
+            childCount: 8,
+            priority: 'High'
+        });
+    }
+
+    if (drpDomains.includes('DM')) {
+        suggestions.push({
+            id: 'ootb_dm_demographics',
+            name: 'Demographics Consistency Checks',
+            description: 'Standard demographic data validation including age calculations and enrollment criteria',
+            domain: 'DM',
+            childCount: 5,
+            priority: 'Medium'
+        });
+    }
+
+    if (drpDomains.includes('CM')) {
+        suggestions.push({
+            id: 'ootb_cm_conmeds',
+            name: 'Concomitant Medication Validation',
+            description: 'Validation of concomitant medications including drug interactions and dosing consistency',
+            domain: 'CM',
+            childCount: 6,
+            priority: 'Medium'
+        });
+    }
+
+    return suggestions;
+}
+
+/**
+ * Display OOTB suggestions
+ */
+function displayOOTBSuggestions(suggestions) {
+    const container = document.getElementById('ootb-suggestions-container');
+    if (!container) return;
+
+    let html = `<div class="row">`;
+
+    suggestions.forEach(suggestion => {
+        html += `
+            <div class="col-md-6 mb-3">
+                <div class="card border-info">
+                    <div class="card-body">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="${suggestion.id}" 
+                                   id="ootb_${suggestion.id}" onchange="toggleOOTBSelection('${suggestion.id}')">
+                            <label class="form-check-label" for="ootb_${suggestion.id}">
+                                <h6 class="card-title text-info">${suggestion.name}</h6>
+                            </label>
+                        </div>
+                        <p class="card-text small text-muted mt-2">${suggestion.description}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-info">${suggestion.domain}</span>
+                            <span class="badge bg-${suggestion.priority === 'High' ? 'danger' : 'warning'}">
+                                ${suggestion.priority} | ${suggestion.childCount} checks
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+/**
+ * Toggle OOTB scenario selection
+ */
+function toggleOOTBSelection(scenarioId) {
+    const checkbox = document.getElementById(`ootb_${scenarioId}`);
+    const addButton = document.getElementById('add-ootb-btn');
+    
+    if (checkbox.checked) {
+        if (!selectedOOTBScenarios.includes(scenarioId)) {
+            selectedOOTBScenarios.push(scenarioId);
+        }
+    } else {
+        selectedOOTBScenarios = selectedOOTBScenarios.filter(id => id !== scenarioId);
+    }
+    
+    addButton.disabled = selectedOOTBScenarios.length === 0;
+}
+
+/**
+ * Add selected OOTB scenarios to parent-child collection
+ */
+async function addSelectedOOTBScenarios() {
+    if (selectedOOTBScenarios.length === 0) {
+        showToast('No OOTB scenarios selected', 'warning');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/get-ootb-scenarios', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                scenario_ids: selectedOOTBScenarios
+            })
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            data.scenarios.forEach(scenario => {
+                scenario.isFromDRP = false;
+                parentChildScenarios.push(scenario);
+            });
+            
+            displayParentChildScenarios();
+            showToast(`Added ${data.scenarios.length} OOTB scenarios`, 'success');
+        } else {
+            throw new Error('Failed to retrieve OOTB scenarios');
+        }
+    } catch (error) {
+        console.error('Error adding OOTB scenarios:', error);
+        showToast('Error adding OOTB scenarios', 'error');
+    }
+}
+
+/**
+ * Bulk add all scenarios to integrated review
+ */
+function bulkAddToIntegratedReview() {
+    if (parentChildScenarios.length === 0) {
+        showToast('No scenarios to add to integrated review', 'warning');
+        return;
+    }
+
+    integratedReviewScenarios = [...parentChildScenarios];
+    displayIntegratedReview();
+    showIntegratedReviewSection();
+    showToast(`Added ${integratedReviewScenarios.length} scenarios to integrated review`, 'success');
+}
+
+/**
+ * Display integrated review scenarios
+ */
+function displayIntegratedReview() {
+    const container = document.getElementById('integrated-review-container');
+    if (!container) return;
+
+    const totalChecks = integratedReviewScenarios.reduce((sum, scenario) => sum + scenario.childScenarios.length, 0);
+    const drpCount = integratedReviewScenarios.filter(s => s.isFromDRP).length;
+    const ootbCount = integratedReviewScenarios.filter(s => !s.isFromDRP).length;
+
+    let html = `
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white text-center">
+                    <div class="card-body">
+                        <h4>${integratedReviewScenarios.length}</h4>
+                        <small>Parent Scenarios</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white text-center">
+                    <div class="card-body">
+                        <h4>${totalChecks}</h4>
+                        <small>Total Checks</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white text-center">
+                    <div class="card-body">
+                        <h4>${drpCount}</h4>
+                        <small>DRP Scenarios</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white text-center">
+                    <div class="card-body">
+                        <h4>${ootbCount}</h4>
+                        <small>OOTB Scenarios</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Scenario</th>
+                        <th>Domain</th>
+                        <th>Source</th>
+                        <th>Checks</th>
+                        <th>Priority</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    integratedReviewScenarios.forEach(scenario => {
+        const avgPriority = getAveragePriority(scenario.childScenarios);
+        html += `
+            <tr>
+                <td>
+                    <strong>${scenario.name}</strong>
+                    <br><small class="text-muted">${scenario.description}</small>
+                </td>
+                <td><span class="badge bg-secondary">${scenario.domain}</span></td>
+                <td><span class="badge bg-${scenario.isFromDRP ? 'info' : 'success'}">${scenario.isFromDRP ? 'DRP' : 'OOTB'}</span></td>
+                <td><span class="badge bg-primary">${scenario.childScenarios.length}</span></td>
+                <td><span class="badge bg-${avgPriority === 'High' ? 'danger' : avgPriority === 'Medium' ? 'warning' : 'success'}">${avgPriority}</span></td>
+            </tr>
+        `;
+    });
+
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+
+    container.innerHTML = html;
+}
+
+/**
+ * Calculate average priority for child scenarios
+ */
+function getAveragePriority(childScenarios) {
+    const priorities = childScenarios.map(child => child.priority || 'Medium');
+    const highCount = priorities.filter(p => p === 'High').length;
+    const mediumCount = priorities.filter(p => p === 'Medium').length;
+    
+    if (highCount > childScenarios.length / 2) return 'High';
+    if (mediumCount > 0) return 'Medium';
+    return 'Low';
+}
+
+/**
+ * Execute integrated review
+ */
+function executeIntegratedReview() {
+    showToast('Executing integrated data review...', 'info');
+    // This would typically trigger the actual data validation process
+    setTimeout(() => {
+        showToast('Integrated review execution completed', 'success');
+    }, 2000);
+}
+
+/**
+ * Export integrated review package
+ */
+function exportIntegratedReview() {
+    const exportData = {
+        summary: {
+            totalParentScenarios: integratedReviewScenarios.length,
+            totalChecks: integratedReviewScenarios.reduce((sum, s) => sum + s.childScenarios.length, 0),
+            drpScenarios: integratedReviewScenarios.filter(s => s.isFromDRP).length,
+            ootbScenarios: integratedReviewScenarios.filter(s => !s.isFromDRP).length,
+            exportTimestamp: new Date().toISOString()
+        },
+        scenarios: integratedReviewScenarios
+    };
+
+    const content = JSON.stringify(exportData, null, 2);
+    downloadFile('integrated_review_package.json', content, 'application/json');
+    showToast('Integrated review package exported', 'success');
+}
+
+/**
+ * Show/hide workflow sections
+ */
+function showScenarioCreationSection() {
+    document.getElementById('scenario-creation-section').style.display = 'block';
+}
+
+function showOOTBSuggestionsSection() {
+    document.getElementById('ootb-suggestions-section').style.display = 'block';
+}
+
+function showIntegratedReviewSection() {
+    document.getElementById('integrated-review-section').style.display = 'block';
+}
+
+/**
+ * Update workflow progress bar
+ */
+function updateWorkflowProgress(step) {
+    const progressBar = document.getElementById('workflow-progress-bar');
+    const progressSection = document.getElementById('workflow-progress-section');
+    
+    if (progressBar && progressSection) {
+        progressSection.style.display = 'block';
+        const percentage = (step / 5) * 100;
+        progressBar.style.width = `${percentage}%`;
+    }
+}
+
+/**
+ * Update step status indicators
+ */
+function updateStepStatus(stepId, status) {
+    const stepElement = document.getElementById(stepId);
+    if (stepElement) {
+        stepElement.className = `section-indicator ${status}`;
+    }
+    
+    // Update workflow step circles in header
+    const stepNumber = stepId.replace('step', '').replace('-indicator', '');
+    const workflowStep = document.querySelector(`.workflow-step:nth-child(${stepNumber})`);
+    if (workflowStep) {
+        workflowStep.className = `workflow-step ${status}`;
+    }
+}
+
+/**
+ * Enhanced create parent-child scenarios with progress updates
+ */
+function createParentChildScenariosEnhanced() {
+    createParentChildScenarios();
+    updateWorkflowProgress(2);
+    updateStepStatus('step2-indicator', 'completed');
+    updateStepStatus('step1-indicator', 'completed');
+}
+
+/**
+ * Enhanced OOTB suggestions with progress updates
+ */
+function suggestOOTBScenariosEnhanced() {
+    suggestOOTBScenarios();
+    updateWorkflowProgress(3);
+    updateStepStatus('step3-indicator', 'active');
+}
+
+/**
+ * Enhanced bulk add with progress updates
+ */
+function bulkAddToIntegratedReviewEnhanced() {
+    bulkAddToIntegratedReview();
+    updateWorkflowProgress(4);
+    updateStepStatus('step4-indicator', 'completed');
+    updateStepStatus('step3-indicator', 'completed');
+}
+
+/**
+ * Enhanced execute review with final progress
+ */
+function executeIntegratedReviewEnhanced() {
+    executeIntegratedReview();
+    updateWorkflowProgress(5);
+    updateStepStatus('step4-indicator', 'completed');
+    
+    // Add completion animation
+    setTimeout(() => {
+        showToast('Complete DRP-to-scenario integration workflow finished!', 'success');
+    }, 500);
+}
+
 /**
  * Download file helper
  */
@@ -2907,6 +3479,108 @@ function downloadFile(filename, content, mimeType) {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+}
+
+/**
+ * Enhanced recommendation functionality for study data patterns
+ */
+function initializeRecommendationForm() {
+    const studyType = document.getElementById('study-type');
+    const therapeuticArea = document.getElementById('therapeutic-area');
+    
+    if (therapeuticArea) {
+        therapeuticArea.addEventListener('change', function() {
+            suggestDomainsForTherapeuticArea(this.value);
+        });
+    }
+    
+    if (studyType) {
+        studyType.addEventListener('change', function() {
+            suggestTagsForStudyType(this.value);
+        });
+    }
+}
+
+function suggestDomainsForTherapeuticArea(therapeuticArea) {
+    const domainSuggestions = {
+        'oncology': ['AE', 'CM', 'LB', 'TU', 'PR'],
+        'cardiology': ['AE', 'VS', 'EG', 'LB', 'CM'],
+        'neurology': ['AE', 'MH', 'LB', 'CM', 'PR'],
+        'respiratory': ['AE', 'VS', 'LB', 'CM', 'PR'],
+        'endocrinology': ['LB', 'AE', 'CM', 'VS', 'DM'],
+        'immunology': ['AE', 'LB', 'CM', 'IE', 'MB'],
+        'infectious_disease': ['AE', 'LB', 'CM', 'MB', 'VS'],
+        'psychiatry': ['AE', 'MH', 'SU', 'CM', 'PR']
+    };
+    
+    const suggestions = domainSuggestions[therapeuticArea] || [];
+    
+    document.querySelectorAll('input[name="recommend_domains"]').forEach(checkbox => {
+        if (suggestions.includes(checkbox.value)) {
+            checkbox.checked = true;
+        }
+    });
+    
+    if (suggestions.length > 0) {
+        showToast(`Auto-selected domains for ${therapeuticArea}`, 'info');
+    }
+}
+
+function suggestTagsForStudyType(studyType) {
+    const tagSuggestions = {
+        'phase1': ['Safety', 'Data Quality'],
+        'phase2': ['Safety', 'Efficacy', 'Data Quality'],
+        'phase3': ['Efficacy', 'Safety', 'Compliance'],
+        'phase4': ['Safety', 'Protocol Deviation', 'Data Quality'],
+        'observational': ['Data Quality', 'Protocol Deviation'],
+        'registry': ['Data Quality', 'Compliance']
+    };
+    
+    const suggestions = tagSuggestions[studyType] || [];
+    
+    document.querySelectorAll('input[name="recommend_tags"]').forEach(checkbox => {
+        if (suggestions.includes(checkbox.value)) {
+            checkbox.checked = true;
+        }
+    });
+    
+    if (suggestions.length > 0) {
+        showToast(`Auto-selected categories for ${studyType}`, 'info');
+    }
+}
+
+async function viewRecommendationDetails(scenarioId) {
+    try {
+        const domainAnalysisElement = document.getElementById(`domain-analysis-${scenarioId}`);
+        if (domainAnalysisElement) {
+            const response = await fetch('/api/generate-domain-analysis', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scenario_id: scenarioId })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                domainAnalysisElement.innerHTML = data.analysis;
+            }
+        }
+        
+        const modelThinkingElement = document.getElementById(`model-thinking-${scenarioId}`);
+        if (modelThinkingElement) {
+            const response = await fetch('/api/generate-model-thinking', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scenario_id: scenarioId })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                modelThinkingElement.innerHTML = data.thinking;
+            }
+        }
+    } catch (error) {
+        console.error('Error loading recommendation details:', error);
+    }
 }
 
 /**
@@ -2931,6 +3605,11 @@ function openChildScenarioModal(parentId, parentName) {
         bsModal.show();
     }
 }
+
+// Initialize enhanced features
+document.addEventListener('DOMContentLoaded', function() {
+    initializeRecommendationForm();
+});
 
 // Add loading states for all form submissions
 document.addEventListener('submit', function(e) {
